@@ -6,4 +6,6 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("Unknown coin type")]
     InvalidCoinType,
+    #[error("Invalid data")]
+    InvalidData,
 }

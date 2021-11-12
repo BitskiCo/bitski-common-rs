@@ -1,6 +1,10 @@
 use crate::models::error::Error;
 
+pub use web3::{types as web3_types};
+
 pub mod models;
+#[cfg(test)]
+pub mod tests;
 
 pub fn known_transaction_request_type_from_json(
     json: serde_json::Value,
@@ -11,6 +15,3 @@ pub fn known_transaction_request_type_from_json(
         json, coin_type, chain_id,
     )
 }
-
-#[cfg(test)]
-pub mod tests;

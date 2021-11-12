@@ -10,9 +10,11 @@ pub trait Transaction {
     where
         Self: Sized;
 
-    fn transaction_info(&self) -> TransactionInfo;
-
     fn hash(&self) -> Vec<u8>;
+}
+
+pub trait IdentifyableTransction: Transaction {
+    fn transaction_info(&self) -> TransactionInfo;
 }
 
 pub trait TransactionRequest {
@@ -24,6 +26,10 @@ pub trait TransactionRequest {
         Self: Sized;
 
     fn transaction_info(&self) -> TransactionInfo;
+}
+
+pub trait GasPricedTransactionRequest: TransactionRequest {
+    fn gas_price(&self) -> String;
 }
 
 pub trait SignableTransactionRequest: TransactionRequest {
