@@ -2,6 +2,7 @@ use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use std::ops::Deref;
 use web3::signing::SigningError;
 
+#[derive(Clone)]
 pub struct TestSigner {
     key: SecretKey,
 }
@@ -29,12 +30,12 @@ impl TestSigner {
         web3::signing::Key::address(self)
     }
 
-    pub fn sign_recoverable(
-        &self,
-        hash: &[u8],
+    pub async fn sign_recoverable(
+        self,
+        hash: Vec<u8>,
         chain_id: Option<u64>,
     ) -> Result<(Vec<u8>, u64), SigningError> {
-        let signature = web3::signing::Key::sign(self, hash, chain_id)?;
+        let signature = web3::signing::Key::sign(&self, &hash, chain_id)?;
         let mut bytes = Vec::new();
         bytes.append(&mut signature.r.as_bytes().to_vec());
         bytes.append(&mut signature.s.as_bytes().to_vec());

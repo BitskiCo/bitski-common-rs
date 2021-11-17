@@ -3,8 +3,8 @@ use crate::tests::helpers::signer::TestSigner;
 use web3::types::Address;
 use crate::models::coin_type::CoinType;
 
-#[test]
-fn test_ethereum_signing() {
+#[tokio::test]
+async fn test_ethereum_signing() {
     let chain_id = 0;
     let signer = TestSigner::new();
     let sender_address = signer.ethereum_address();
@@ -22,9 +22,10 @@ fn test_ethereum_signing() {
     let original_message = transaction.message_hash(chain_id);
 
     let (signature_bytes, recovery_id) = transaction
-        .sign_transaction(chain_id, |message| {
-            signer.sign_recoverable(&message, Some(chain_id))
+        .sign_transaction(chain_id, move |message| {
+            signer.sign_recoverable(message, Some(chain_id))
         })
+        .await
         .expect("Could not sign transaction");
 
     let recovered_address =

@@ -25,7 +25,7 @@ let transaction =
 let (signature_bytes, recovery_id) = transaction
     .sign_transaction(chain_id, |message| {
         signer.sign_recoverable(&message, Some(chain_id))
-    })?;
+    }).await?;
 ```
 
 

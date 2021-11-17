@@ -1,3 +1,4 @@
+use std::future::Future;
 use crate::models::account::Account;
 use crate::models::error::Error;
 use crate::models::transaction_info::TransactionInfo;
@@ -41,13 +42,13 @@ pub trait SignableTransactionRequest: TransactionRequest {
 }
 
 impl dyn SignableTransactionRequest {
-    pub fn sign_transaction<E, F: Fn(&[u8]) -> Result<(Vec<u8>, u64), E>>(
+    pub async fn sign_transaction<E, O: Future<Output = Result<(Vec<u8>, u64), E>>, F: FnOnce(Vec<u8>) -> O> (
         &self,
         chain_id: u64,
         provider: F,
     ) -> Result<(Vec<u8>, u64), E> {
         let hash = self.message_hash(chain_id);
-        let (signature, recovery) = provider(&hash)?;
+        let (signature, recovery) = provider(hash).await?;
         Ok((signature, recovery))
     }
 }
