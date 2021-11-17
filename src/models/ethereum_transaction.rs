@@ -1,14 +1,20 @@
 use crate::models::error::Error;
-use crate::models::transaction::{IdentifyableTransction, SignableTransactionRequest, Transaction, TransactionRequest};
+use crate::models::transaction::{
+    IdentifyableTransction, SignableTransactionRequest, Transaction, TransactionRequest,
+};
 use crate::models::transaction_info::TransactionInfo;
 use rlp::RlpStream;
 use serde_json::Value;
-use web3::types::{TransactionRequest as Web3TransactionRequest, TransactionParameters as Web3TransactionParameters, Transaction as Web3Transaction , U256};
+use web3::types::{
+    Address, Transaction as Web3Transaction, TransactionParameters as Web3TransactionParameters,
+    TransactionRequest as Web3TransactionRequest, U256,
+};
 
-
-const METHOD_LENGTH: usize = 12;
+const METHOD_LENGTH: usize = 10;
 
 impl Transaction for Web3Transaction {
+    type Account = Address;
+
     fn from_json(json: Value) -> Result<Self, Error> {
         let transaction = serde_json::from_value(json)?;
         Ok(transaction)
@@ -22,34 +28,60 @@ impl Transaction for Web3Transaction {
     fn hash(&self) -> Vec<u8> {
         self.hash.0.to_vec()
     }
+
+    fn sender(&self) -> Option<Self::Account> {
+        self.from
+    }
 }
+
+fn safe_transfer_from_transaction_info(data: &str) -> TransactionInfo {
+    let _method = data[2..10].to_string();
+    let from = data[10..74]
+        .trim_start_matches("000000000000000000000000")
+        .to_string();
+    let to = data[74..138]
+        .trim_start_matches("000000000000000000000000")
+        .to_string();
+    let id = data[138..202].to_string();
+    let value = data[202..266].to_string();
+    let _data = data[266..].to_string();
+    TransactionInfo::TokenTransfer {
+        from: format!("0x{}", from),
+        to: format!("0x{}", to),
+        amount: format!("0x{}", value),
+        token_id: Some(format!("0x{}", id)),
+        token_info: None,
+    }
+}
+
+const SAFE_TRANSFER_FROM: &'static str = "0xf242432a";
 
 impl IdentifyableTransction for Web3Transaction {
     fn transaction_info(&self) -> TransactionInfo {
         let value = Some(serde_json::json!(self.value).as_str().unwrap().to_owned());
         let input = serde_json::json!(self.input).as_str().unwrap().to_owned();
-        match (input.split_at(12), input.len()) {
+        match input.split_at(10).0 {
+            SAFE_TRANSFER_FROM => safe_transfer_from_transaction_info(&input),
             _ => TransactionInfo::Unknown { value },
         }
     }
 }
 
-
 fn rlp_append_unsigned(request: &Web3TransactionRequest, rlp: &mut RlpStream, chain_id: u64) {
-        rlp.begin_list(9);
-        rlp.append(&request.nonce);
-        rlp.append(&request.gas_price);
-        rlp.append(&request.gas);
-        if let Some(to) = request.to {
-            rlp.append(&to);
-        } else {
-            rlp.append(&"");
-        }
-        rlp.append(&request.value);
-        rlp.append(&request.data.as_ref().map(|data| data.0.clone()));
-        rlp.append(&chain_id);
-        rlp.append(&0u8);
-        rlp.append(&0u8);
+    rlp.begin_list(9);
+    rlp.append(&request.nonce);
+    rlp.append(&request.gas_price);
+    rlp.append(&request.gas);
+    if let Some(to) = request.to {
+        rlp.append(&to);
+    } else {
+        rlp.append(&"");
+    }
+    rlp.append(&request.value);
+    rlp.append(&request.data.as_ref().map(|data| data.0.clone()));
+    rlp.append(&chain_id);
+    rlp.append(&0u8);
+    rlp.append(&0u8);
 }
 
 impl TransactionRequest for Web3TransactionRequest {
@@ -102,7 +134,8 @@ impl TransactionRequest for Web3TransactionRequest {
             String::new()
         };
 
-        match (method.as_str(), input.len()) {
+        match method.as_str() {
+            SAFE_TRANSFER_FROM => safe_transfer_from_transaction_info(&input),
             _ => TransactionInfo::Unknown { value },
         }
     }
@@ -121,7 +154,10 @@ impl SignableTransactionRequest for Web3TransactionRequest {
     }
 }
 
-fn parameters_from_request(request: &Web3TransactionRequest, chain_id: Option<u64>) -> Result<Web3TransactionParameters, Error> {
+fn parameters_from_request(
+    request: &Web3TransactionRequest,
+    chain_id: Option<u64>,
+) -> Result<Web3TransactionParameters, Error> {
     let gas = request.gas.clone().ok_or(Error::InvalidData)?;
     let value = request.value.clone().ok_or(Error::InvalidData)?;
     let data = request.data.clone().ok_or(Error::InvalidData)?;

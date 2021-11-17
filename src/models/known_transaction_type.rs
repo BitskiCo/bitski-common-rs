@@ -1,3 +1,4 @@
+use crate::models::account::Account;
 use crate::models::error::Error;
 use crate::models::transaction::{SignableTransactionRequest, TransactionRequest};
 
@@ -10,15 +11,22 @@ impl KnownTransactionRequestType {
     pub fn transaction_request(&self) -> &dyn TransactionRequest {
         match self {
             Self::Ethereum(tx) => tx,
-            Self::Solana(_tx) => unimplemented!("Cant handle Solana yet")
+            Self::Solana(_tx) => unimplemented!("Cant handle Solana yet"),
         }
     }
+
+    // pub fn sender(&self) -> &dyn Account {
+    //     match self {
+    //         Self::Ethereum(tx) => &tx.from,
+    //         Self::Solana(_tx) => unimplemented!("Cant handle Solana yet")
+    //     }
+    // }
 
     #[cfg(feature = "signing")]
     pub fn signable_transaction_request(self) -> Box<dyn SignableTransactionRequest> {
         match self {
             Self::Ethereum(tx) => Box::new(tx),
-            Self::Solana(_tx) => unimplemented!("Can't sign Solana yet")
+            Self::Solana(_tx) => unimplemented!("Can't sign Solana yet"),
         }
     }
 }

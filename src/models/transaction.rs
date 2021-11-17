@@ -1,7 +1,9 @@
+use crate::models::account::Account;
 use crate::models::error::Error;
 use crate::models::transaction_info::TransactionInfo;
 
 pub trait Transaction {
+    type Account: Account;
     fn from_json(json: serde_json::Value) -> Result<Self, Error>
     where
         Self: Sized;
@@ -11,6 +13,8 @@ pub trait Transaction {
         Self: Sized;
 
     fn hash(&self) -> Vec<u8>;
+
+    fn sender(&self) -> Option<Self::Account>;
 }
 
 pub trait IdentifyableTransction: Transaction {

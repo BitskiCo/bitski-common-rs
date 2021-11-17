@@ -55,3 +55,53 @@ fn test_ethereum_transfer_token_info() {
         "Transaction should be a token transfer"
     );
 }
+
+#[test]
+fn test_1155_transfer_token_info() {
+    let chain_id = 0;
+    let signer = TestSigner::new();
+    let sender_address = signer.ethereum_address();
+    let contract_address = Address::random();
+    let to = "0x0d4a03B23Ae95409A4ecfE9396A9D39ca4f0fed1".to_owned();
+    let amount = "0x0000000000000000000000000000000000000000000000000000000000000001".to_owned();
+    let token_id =
+        Some("0x000000000000000000000000000000000000000000000000000000000003df5a".to_owned());
+
+    let transaction_json = serde_json::json!({
+        "from": sender_address,
+        "to": contract_address,
+        "data": format!("0xf242432a000000000000000000000000{}0000000000000000000000000d4a03b23ae95409a4ecfe9396a9d39ca4f0fed1000000000000000000000000000000000000000000000000000000000003df5a000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d4a03b23ae95409a4ecfe9396a9d39ca4f0fed1000000000000000000000000000000000000000000000000000000000003df5a000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000", format!("{:02x}", sender_address))
+    });
+
+    let request_type =
+        crate::known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))
+            .expect("Could not identify transaction");
+    let info = request_type.transaction_request().transaction_info();
+
+    let from = format!("0x{:02x}", sender_address);
+    assert!(
+        matches!(
+            info,
+            TransactionInfo::TokenTransfer {
+                from,
+                to,
+                amount,
+                token_id,
+                token_info: None
+            }
+        ),
+        "Transaction should be a token transfer"
+    );
+}
+
+#[test]
+fn test_ethereum_address_token_info() {
+    use crate::models::account::Account;
+    let public_key =
+        hex::decode("032fa5b4bfb4cddf97122f3a4b87be49fa43d9cd70d93bbb48ea8bc25be620cdf3").unwrap();
+    let address = web3::types::Address::from_public_key(public_key.as_slice()).unwrap();
+    assert_eq!(
+        address.address(),
+        "0xccbad6e6bc69d6f15d02a68f78b7869bd7ea7eed"
+    );
+}

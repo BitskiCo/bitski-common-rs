@@ -1,6 +1,6 @@
 use crate::models::error::Error;
 
-pub use web3::{types as web3_types};
+pub use web3::types as web3_types;
 
 pub mod models;
 #[cfg(test)]

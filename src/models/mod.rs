@@ -1,8 +1,10 @@
+pub mod account;
 pub mod error;
+pub mod ethereum_account;
 #[cfg(feature = "ethereum")]
 pub mod ethereum_transaction;
 #[cfg(feature = "all-chains")]
 pub mod known_transaction_type;
+pub mod message;
 pub mod transaction;
 pub mod transaction_info;
-pub mod message;

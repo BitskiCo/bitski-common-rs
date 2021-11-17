@@ -8,6 +8,8 @@ Allows signing and identifying transactions.
 
 ### Signing
 
+This needs to be implemented by the wallet's secure key store.
+
 ```rust
 let transaction_json = serde_json::json!({
     "from": sender_address,
@@ -28,6 +30,8 @@ let (signature_bytes, recovery_id) = transaction
 
 
 ### Identifying
+
+This can be used to display information about a transaction to the user before they approve the transaction.
 
 ```rust
 let transaction_json = serde_json::json!({

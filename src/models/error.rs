@@ -8,4 +8,6 @@ pub enum Error {
     InvalidCoinType,
     #[error("Invalid data")]
     InvalidData,
+    #[error("Invalid key")]
+    Key(secp256k1::Error),
 }

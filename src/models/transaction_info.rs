@@ -1,4 +1,4 @@
-#[derive(Clone, Default)]
+#[derive(Clone, PartialEq, Default, Debug)]
 pub struct TokenInfo {
     pub name: String,
     pub symbol: Option<String>,
@@ -7,7 +7,7 @@ pub struct TokenInfo {
     pub image: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum TransactionInfo {
     TokenTransfer {
         from: String,
