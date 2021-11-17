@@ -18,7 +18,7 @@ let transaction_json = serde_json::json!({
 });
 
 let transaction =
-    known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))
+    known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))
         .expect("Could not identify transaction")
         .signable_transaction_request();
 
@@ -40,6 +40,6 @@ let transaction_json = serde_json::json!({
     "value": "0x1"
 });
 
-let request_type = known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))?;
+let request_type = known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))?;
 let info = request_type.transaction_request().transaction_info();
 ```

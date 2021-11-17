@@ -1,4 +1,4 @@
-use crate::models::account::Account;
+use crate::models::coin_type::CoinType;
 use crate::models::error::Error;
 use crate::models::transaction::{SignableTransactionRequest, TransactionRequest};
 
@@ -34,15 +34,15 @@ impl KnownTransactionRequestType {
 impl KnownTransactionRequestType {
     pub fn from_json(
         value: serde_json::Value,
-        coin_type: u64,
+        coin_type: CoinType,
         _chain_id: Option<u64>,
     ) -> Result<KnownTransactionRequestType, Error> {
         match coin_type {
-            60 => {
+            CoinType::Ethereum => {
                 let transaction = serde_json::from_value(value)?;
                 Ok(KnownTransactionRequestType::Ethereum(transaction))
             }
-            501 => {
+            CoinType::Solana => {
                 let transaction = serde_json::from_value(value)?;
                 Ok(KnownTransactionRequestType::Solana(transaction))
             }

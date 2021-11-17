@@ -8,3 +8,4 @@ pub mod known_transaction_type;
 pub mod message;
 pub mod transaction;
 pub mod transaction_info;
+pub mod coin_type;

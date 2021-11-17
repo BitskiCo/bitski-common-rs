@@ -1,6 +1,7 @@
 use crate::models::transaction_info::TransactionInfo;
 use crate::tests::helpers::signer::TestSigner;
 use web3::types::Address;
+use crate::models::coin_type::CoinType;
 
 #[test]
 fn test_ethereum_signing() {
@@ -15,7 +16,7 @@ fn test_ethereum_signing() {
     });
 
     let transaction =
-        crate::known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))
+        crate::known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))
             .expect("Could not identify transaction")
             .signable_transaction_request();
     let original_message = transaction.message_hash(chain_id);
@@ -46,7 +47,7 @@ fn test_ethereum_transfer_token_info() {
     });
 
     let request_type =
-        crate::known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))
+        crate::known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))
             .expect("Could not identify transaction");
     let info = request_type.transaction_request().transaction_info();
 
@@ -74,7 +75,7 @@ fn test_1155_transfer_token_info() {
     });
 
     let request_type =
-        crate::known_transaction_request_type_from_json(transaction_json, 60, Some(chain_id))
+        crate::known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))
             .expect("Could not identify transaction");
     let info = request_type.transaction_request().transaction_info();
 
