@@ -27,3 +27,9 @@ ethereum = ["web3", "tiny-keccak", "secp256k1"]
 solana = ["solana-sdk/full"]
 signing = ["web3-signing"]
 web3-signing = ["web3/signing"]
+
+[workspace]
+
+members = [
+    "eip712"
+]
