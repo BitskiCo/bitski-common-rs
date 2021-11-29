@@ -277,13 +277,10 @@ impl<'a> Hasher<'a> {
                 if let Some(val) = obj.get(member.name) {
                     if !visited.insert(member.name) {
                         return Err(anyhow!("duplicate member {}", member.name));
-                    } else if val.is_null() {
-                        return Err(anyhow!("null is not supported"));
+                    } else if !val.is_null() {
+                        let buf = self.hash_value(&member.type_, val)?;
+                        keccak.write(buf.as_fixed_bytes());
                     }
-                    let buf = self.hash_value(&member.type_, val)?;
-                    keccak.write(buf.as_fixed_bytes());
-                } else {
-                    return Err(anyhow!("missing value for struct member {}", member.name));
                 }
             }
 
@@ -1301,6 +1298,47 @@ mod tests {
         assert_eq!(
             format!("{}", result.encode_hex::<String>()),
             "c52c0ee5d84264471806290a3f2c4cecfc5490626bf912d01f240d7a274b371e"
+        );
+    }
+
+    #[test]
+    fn hasher_hash_struct_ok_optional_fields() {
+        let typed_data = serde_json::from_value::<TypedData>(json!({
+            "types": {
+                "EIP712Domain": [
+                    {"name": "name", "type": "string"},
+                    {"name": "version", "type": "string"},
+                    {"name": "chainId", "type": "uint256"},
+                    {"name": "verifyingContract", "type": "address"}
+                ],
+                "Test": [
+                    {"name": "message", "type": "string"},
+                ],
+            },
+            "primaryType": "Test",
+            "domain": {
+                "name": "Test",
+                "version": "1",
+                "chainId": 1
+            },
+            "message": {
+            }
+        }))
+        .unwrap();
+
+        let hasher = Hasher::try_from(&typed_data).unwrap();
+        let result = hasher
+            .hash_struct(&typed_data.primary_type, &typed_data.message)
+            .unwrap();
+        assert_eq!(
+            format!("{}", result.encode_hex::<String>()),
+            "1630ebec0a28b7c760e7ec9071b2e00ec18094573dcdcf596cd0e9238b7fcccf"
+        );
+
+        let result = hasher.hash(&typed_data).unwrap();
+        assert_eq!(
+            format!("{}", result.encode_hex::<String>()),
+            "404a8e037466ecc0f5a3f4cbe811f3f8ec0ed441933d0869408955825843509c"
         );
     }
 
