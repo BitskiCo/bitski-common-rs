@@ -274,14 +274,17 @@ impl<'a> Hasher<'a> {
 
             let mut visited: HashSet<&str> = HashSet::new();
             for member in &type_.members {
+                if !visited.insert(member.name) {
+                    return Err(anyhow!("duplicate member {}", member.name));
+                }
                 if let Some(val) = obj.get(member.name) {
-                    if !visited.insert(member.name) {
-                        return Err(anyhow!("duplicate member {}", member.name));
-                    } else if !val.is_null() {
+                    if !val.is_null() {
                         let buf = self.hash_value(&member.type_, val)?;
                         keccak.write(buf.as_fixed_bytes());
+                        continue;
                     }
                 }
+                keccak.write(&[0u8; 32]);
             }
 
             if obj.keys().all(|key| visited.contains(key.as_str())) {
@@ -1309,7 +1312,8 @@ mod tests {
                     {"name": "name", "type": "string"},
                     {"name": "version", "type": "string"},
                     {"name": "chainId", "type": "uint256"},
-                    {"name": "verifyingContract", "type": "address"}
+                    {"name": "verifyingContract", "type": "address"},
+                    {"name": "metadata", "type": "string"}
                 ],
                 "Test": [
                     {"name": "message", "type": "string"},
@@ -1319,7 +1323,8 @@ mod tests {
             "domain": {
                 "name": "Test",
                 "version": "1",
-                "chainId": 1
+                "chainId": 1,
+                "metadata": "test"
             },
             "message": {
             }
@@ -1332,13 +1337,13 @@ mod tests {
             .unwrap();
         assert_eq!(
             format!("{}", result.encode_hex::<String>()),
-            "1630ebec0a28b7c760e7ec9071b2e00ec18094573dcdcf596cd0e9238b7fcccf"
+            "6c356e95b8cbedbda73e904b83431a7161093c2a15830b46f6ad460dd8c93885"
         );
 
         let result = hasher.hash(&typed_data).unwrap();
         assert_eq!(
             format!("{}", result.encode_hex::<String>()),
-            "404a8e037466ecc0f5a3f4cbe811f3f8ec0ed441933d0869408955825843509c"
+            "7b1275efbb90ebd79b5a6719a55fbc14bca636720da305be12b899e1f5dda576"
         );
     }
 

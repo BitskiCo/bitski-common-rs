@@ -41,7 +41,8 @@ contract OptionalFieldsExample {
 
     function hash() internal pure returns (bytes32) {
         return keccak256(abi.encode(
-            TEST_TYPEHASH
+            TEST_TYPEHASH,
+            0x0
         ));
     }
 
