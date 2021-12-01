@@ -2,13 +2,13 @@ use crate::models::error::Error;
 use crate::models::message::{MessageInfo, SignableMessage};
 use serde::Deserialize;
 use serde_json::Value;
-use web3::signing::Key;
 
 #[derive(Deserialize, Clone)]
 #[serde(untagged)]
 pub enum Message {
     String(String),
     TypedData(bitski_eip_712::TypedData),
+    
 }
 
 impl crate::models::message::Message for Message {
@@ -43,7 +43,7 @@ impl SignableMessage for Message {
             Message::TypedData(s) => s
                 .hash()
                 .map(|h| h.as_bytes().to_vec())
-                .map_err(|error| Error::InvalidData),
+                .or(Err(Error::InvalidData)),
         }
     }
 }

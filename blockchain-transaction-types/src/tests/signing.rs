@@ -1,6 +1,7 @@
 use crate::models::coin_type::CoinType;
 use crate::models::transaction_info::TransactionInfo;
 use crate::tests::helpers::signer::TestSigner;
+use hex::ToHex as _;
 use web3::types::Address;
 
 #[tokio::test]
@@ -22,7 +23,7 @@ async fn test_ethereum_signing() {
     )
     .expect("Could not identify transaction")
     .signable_transaction_request();
-    let original_message = transaction.message_hash(chain_id);
+    let original_message = transaction.message_hash(chain_id).expect("hash succeeds");
 
     let (signature_bytes, recovery_id) = transaction
         .sign_transaction(chain_id, move |message| {
@@ -196,4 +197,77 @@ async fn test_721_signature() {
         })
         .await
         .expect("Could not sign transaction");
+}
+
+#[tokio::test]
+async fn test_2930_signature() {
+    let chain_id = 0;
+    let signer = TestSigner::new();
+    let sender_address = signer.ethereum_address();
+    let json = serde_json::json!({
+      "type": "0x1",
+      "from": sender_address,
+      "to": Address::random(),
+      "gasPrice": "0x09184e72a000",
+      "gas": "0x8AE0",
+      "value": "0x2933BC9",
+      "nonce": "0x333"
+    });
+
+    let transaction =
+        crate::known_transaction_request_type_from_json(json, CoinType::Ethereum, Some(chain_id))
+            .expect("Could not identify transaction")
+            .signable_transaction_request();
+
+    let original_message = transaction.message_hash(chain_id).expect("hash succeeds");
+
+    let (signature_bytes, recovery_id) = transaction
+        .sign_transaction(chain_id, move |transaction| {
+            signer.sign_recoverable(transaction, Some(chain_id))
+        })
+        .await
+        .expect("Could not sign transaction");
+
+    let recovered_address =
+        web3::signing::recover(&original_message, &signature_bytes, recovery_id as i32)
+            .expect("Could not recover signature");
+
+    assert_eq!(recovered_address, sender_address, "Address should match");
+}
+
+#[tokio::test]
+async fn test_1559_signature() {
+    let chain_id = 0;
+    let signer = TestSigner::new();
+    let sender_address = signer.ethereum_address();
+    let json = serde_json::json!({
+      "type": "0x2",
+      "from": sender_address,
+      "to": Address::random(),
+      "gas": "0x8AE0",
+      "maxPriorityFeePerGas": "0x1284D",
+      "maxFeePerGas": "0x1D97C",
+      "value": "0x2933BC9",
+      "nonce": "0x333"
+    });
+
+    let transaction =
+        crate::known_transaction_request_type_from_json(json, CoinType::Ethereum, Some(chain_id))
+            .expect("Could not identify transaction")
+            .signable_transaction_request();
+
+    let original_message = transaction.message_hash(chain_id).expect("hash succeeds");
+
+    let (signature_bytes, recovery_id) = transaction
+        .sign_transaction(chain_id, move |transaction| {
+            signer.sign_recoverable(transaction, Some(chain_id))
+        })
+        .await
+        .expect("Could not sign transaction");
+
+    let recovered_address =
+        web3::signing::recover(&original_message, &signature_bytes, recovery_id as i32)
+            .expect("Could not recover signature");
+
+    assert_eq!(recovered_address, sender_address, "Address should match");
 }
