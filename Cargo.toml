@@ -1,5 +1,5 @@
 [workspace]
 members = [
   "blockchain-transaction-types",
-  "eip712",
+  "eip-712",
 ]
