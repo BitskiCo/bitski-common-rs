@@ -1,45 +1,25 @@
-# Blockchain Transaction Types
+# Bitski Common Library for Rust
 
-A generic abstraction on a variety of basic Blockchain transactions.
+## About
 
-Allows signing and identifying transactions.
+This is a collection of Rust crates that implement shared Bitski backend libraries.
 
-## Examples
+## Getting Started
 
-### Signing
+### Prerequisites
 
-This needs to be implemented by the wallet's secure key store.
+Install Rust and Cargo.
 
-```rust
-let transaction_json = serde_json::json!({
-    "from": sender_address,
-    "to": Address::random(),
-    "value": "0x1"
-});
+### Installing
 
-let transaction =
-    known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))
-        .expect("Could not identify transaction")
-        .signable_transaction_request();
+In `Cargo.toml` add the relevant dependencies:
 
-let (signature_bytes, recovery_id) = transaction
-    .sign_transaction(chain_id, |message| {
-        signer.sign_recoverable(&message, Some(chain_id))
-    }).await?;
+```
+[dependencies]
+bitski-eip712 = {git = "https://github.com/BitskiCo/blockchain-transaction-types"}
+blockchain-transaction-types = {git = "https://github.com/BitskiCo/blockchain-transaction-types"}
 ```
 
+## Testing
 
-### Identifying
-
-This can be used to display information about a transaction to the user before they approve the transaction.
-
-```rust
-let transaction_json = serde_json::json!({
-    "from": sender_address,
-    "to": Address::random(),
-    "value": "0x1"
-});
-
-let request_type = known_transaction_request_type_from_json(transaction_json, CoinType::Ethereum, Some(chain_id))?;
-let info = request_type.transaction_request().transaction_info();
-```
+Run `cargo test --all-features` in the repository directory to test all the code. The sub-crates will be tested as part of the Cargo workspace.
