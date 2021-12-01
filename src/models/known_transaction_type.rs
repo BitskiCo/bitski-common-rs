@@ -1,6 +1,6 @@
 use crate::models::coin_type::CoinType;
-use crate::models::error::Error;
 use crate::models::transaction::{SignableTransactionRequest, TransactionRequest};
+use crate::prelude::*;
 
 pub enum KnownTransactionRequestType {
     Ethereum(web3::types::TransactionRequest),
@@ -36,7 +36,7 @@ impl KnownTransactionRequestType {
         value: serde_json::Value,
         coin_type: CoinType,
         _chain_id: Option<u64>,
-    ) -> Result<KnownTransactionRequestType, Error> {
+    ) -> Result<KnownTransactionRequestType> {
         match coin_type {
             CoinType::Ethereum => {
                 let transaction = serde_json::from_value(value)?;

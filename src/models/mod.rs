@@ -1,5 +1,4 @@
 pub mod account;
-pub mod error;
 pub mod ethereum_account;
 #[cfg(feature = "ethereum")]
 pub mod ethereum_transaction;

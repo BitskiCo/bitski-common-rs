@@ -1,5 +1,10 @@
 use thiserror::Error as ThisError;
 
+pub type Result<T, E = Error>
+where
+    E: std::error::Error,
+= std::result::Result<T, E>;
+
 #[derive(Debug, ThisError)]
 pub enum Error {
     #[error("Could not decode JSON: {0}")]

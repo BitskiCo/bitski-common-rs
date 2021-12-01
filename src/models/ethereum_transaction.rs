@@ -1,8 +1,3 @@
-use crate::models::error::Error;
-use crate::models::transaction::{
-    IdentifyableTransction, SignableTransactionRequest, Transaction, TransactionRequest,
-};
-use crate::models::transaction_info::TransactionInfo;
 use rlp::RlpStream;
 use serde_json::Value;
 use web3::types::{
@@ -10,17 +5,23 @@ use web3::types::{
     TransactionRequest as Web3TransactionRequest, U256,
 };
 
+use crate::models::transaction::{
+    IdentifyableTransction, SignableTransactionRequest, Transaction, TransactionRequest,
+};
+use crate::models::transaction_info::TransactionInfo;
+use crate::prelude::*;
+
 const METHOD_LENGTH: usize = 10;
 
 impl Transaction for Web3Transaction {
     type Account = Address;
 
-    fn from_json(json: Value) -> Result<Self, Error> {
+    fn from_json(json: Value) -> Result<Self> {
         let transaction = serde_json::from_value(json)?;
         Ok(transaction)
     }
 
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error> {
+    fn from_raw(bytes: &[u8]) -> Result<Self> {
         let transaction = serde_json::from_slice(bytes)?;
         Ok(transaction)
     }
@@ -85,12 +86,12 @@ fn rlp_append_unsigned(request: &Web3TransactionRequest, rlp: &mut RlpStream, ch
 }
 
 impl TransactionRequest for Web3TransactionRequest {
-    fn from_json(json: Value) -> Result<Self, Error> {
+    fn from_json(json: Value) -> Result<Self> {
         let request = serde_json::from_value(json)?;
         Ok(request)
     }
 
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error> {
+    fn from_raw(bytes: &[u8]) -> Result<Self> {
         let request = serde_json::from_slice(bytes)?;
         Ok(request)
     }
@@ -157,7 +158,7 @@ impl SignableTransactionRequest for Web3TransactionRequest {
 fn parameters_from_request(
     request: &Web3TransactionRequest,
     chain_id: Option<u64>,
-) -> Result<Web3TransactionParameters, Error> {
+) -> Result<Web3TransactionParameters> {
     let gas = request.gas.clone().ok_or(Error::InvalidData)?;
     let value = request.value.clone().ok_or(Error::InvalidData)?;
     let data = request.data.clone().ok_or(Error::InvalidData)?;
@@ -175,14 +176,14 @@ fn parameters_from_request(
 }
 
 impl TransactionRequest for Web3TransactionParameters {
-    fn from_json(json: Value) -> Result<Self, Error> {
+    fn from_json(json: Value) -> Result<Self> {
         let chain_id = json["chainId"].as_u64();
         let request: Web3TransactionRequest = serde_json::from_value(json)?;
         let parameters = parameters_from_request(&request, chain_id)?;
         Ok(parameters)
     }
 
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error> {
+    fn from_raw(bytes: &[u8]) -> Result<Self> {
         let request: Web3TransactionRequest = serde_json::from_slice(bytes)?;
         let parameters = parameters_from_request(&request, None)?;
         Ok(parameters)

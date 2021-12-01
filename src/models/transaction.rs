@@ -1,15 +1,16 @@
 use std::future::Future;
+
 use crate::models::account::Account;
-use crate::models::error::Error;
 use crate::models::transaction_info::TransactionInfo;
+use crate::prelude::*;
 
 pub trait Transaction {
     type Account: Account;
-    fn from_json(json: serde_json::Value) -> Result<Self, Error>
+    fn from_json(json: serde_json::Value) -> Result<Self>
     where
         Self: Sized;
 
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error>
+    fn from_raw(bytes: &[u8]) -> Result<Self>
     where
         Self: Sized;
 
@@ -23,10 +24,10 @@ pub trait IdentifyableTransction: Transaction {
 }
 
 pub trait TransactionRequest {
-    fn from_json(json: serde_json::Value) -> Result<Self, Error>
+    fn from_json(json: serde_json::Value) -> Result<Self>
     where
         Self: Sized;
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error>
+    fn from_raw(bytes: &[u8]) -> Result<Self>
     where
         Self: Sized;
 

@@ -1,11 +1,11 @@
-use crate::models::error::Error;
+use crate::prelude::*;
 
 pub trait Message {
-    fn from_json(json: serde_json::Value) -> Result<Self, Error>
+    fn from_json(json: serde_json::Value) -> Result<Self>
     where
         Self: Sized;
 
-    fn from_raw(bytes: &[u8]) -> Result<Self, Error>
+    fn from_raw(bytes: &[u8]) -> Result<Self>
     where
         Self: Sized;
 

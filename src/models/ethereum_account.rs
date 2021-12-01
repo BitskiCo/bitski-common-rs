@@ -2,10 +2,10 @@ use secp256k1::PublicKey;
 use tiny_keccak::{Hasher, Keccak};
 
 use crate::models::account::Account;
-use crate::models::error::Error;
+use crate::prelude::*;
 
 impl Account for web3::types::Address {
-    fn from_public_key(public_key_data: &[u8]) -> Result<Self, Error> {
+    fn from_public_key(public_key_data: &[u8]) -> Result<Self> {
         let public_key = PublicKey::from_slice(public_key_data).map_err(Error::Key)?;
         let public_key = public_key.serialize_uncompressed();
         println!("Public key len: {}", public_key.len());
