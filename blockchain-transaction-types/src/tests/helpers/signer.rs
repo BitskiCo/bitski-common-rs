@@ -1,5 +1,6 @@
-use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use std::ops::Deref;
+
+use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use web3::signing::SigningError;
 
 #[derive(Clone)]

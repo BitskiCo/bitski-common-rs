@@ -38,7 +38,7 @@ pub trait GasPricedTransactionRequest: TransactionRequest {
 }
 
 pub trait SignableTransactionRequest: TransactionRequest {
-    fn message_hash(&self, chain_id: u64) -> Vec<u8>;
+    fn message_hash(&self, chain_id: u64) -> Result<Vec<u8>, Error>;
 }
 
 impl dyn SignableTransactionRequest {
@@ -50,9 +50,9 @@ impl dyn SignableTransactionRequest {
         &self,
         chain_id: u64,
         provider: F,
-    ) -> Result<(Vec<u8>, u64), E> {
-        let hash = self.message_hash(chain_id);
-        let (signature, recovery) = provider(hash).await?;
+    ) -> Result<(Vec<u8>, u64), Error> {
+        let hash = self.message_hash(chain_id)?;
+        let (signature, recovery) = provider(hash).await.or(Err(Error::InvalidData))?;
         Ok((signature, recovery))
     }
 }
