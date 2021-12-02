@@ -1,7 +1,7 @@
-use std::future::Future;
 use crate::models::account::Account;
 use crate::models::error::Error;
 use crate::models::transaction_info::TransactionInfo;
+use std::future::Future;
 
 pub trait Transaction {
     type Account: Account;
@@ -42,7 +42,11 @@ pub trait SignableTransactionRequest: TransactionRequest {
 }
 
 impl dyn SignableTransactionRequest {
-    pub async fn sign_transaction<E, O: Future<Output = Result<(Vec<u8>, u64), E>>, F: FnOnce(Vec<u8>) -> O> (
+    pub async fn sign_transaction<
+        E,
+        O: Future<Output = Result<(Vec<u8>, u64), E>>,
+        F: FnOnce(Vec<u8>) -> O,
+    >(
         &self,
         chain_id: u64,
         provider: F,
