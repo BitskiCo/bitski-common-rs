@@ -15,8 +15,8 @@ use crate::*;
 
 const EIP_712_DOMAIN: &str = "EIP712Domain";
 
-#[derive(Debug, Default)]
-pub struct Hasher<'a> {
+#[derive(Debug)]
+pub(crate) struct Hasher<'a> {
     struct_types: HashMap<&'a str, StructType<'a>>,
     domain_separator: H256,
 }
@@ -24,10 +24,13 @@ pub struct Hasher<'a> {
 impl<'a> Hasher<'a> {
     /// Creates an `Hasher` with default primitive types.
     fn new() -> Self {
-        Self::default()
+        Self {
+            struct_types: Default::default(),
+            domain_separator: Default::default(),
+        }
     }
 
-    pub fn hash(&self, typed_data: &TypedData) -> Result<H256> {
+    pub(crate) fn hash(&self, typed_data: &TypedData) -> Result<H256> {
         let hash_struct = self.hash_struct(&typed_data.primary_type, &typed_data.message)?;
         let mut keccak = Keccak::v256();
         keccak.write(&[0x19, 0x01]);

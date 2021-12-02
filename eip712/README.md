@@ -65,11 +65,9 @@ fn example() {
             "contents": "Hello, Bob!"
         }
     })).unwrap();
-    let hasher = Hasher::try_from(&typed_data).unwrap();
-    let result = hasher.hash(&typed_data).unwrap();
 
     assert_eq!(
-        format!("{}", result.encode_hex::<String>()),
+        format!("{}", result.hash()?.encode_hex::<String>()),
         "be609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2"
     );
 }
