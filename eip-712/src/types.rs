@@ -10,58 +10,38 @@ use web3::types::H256;
 use crate::MemberType;
 
 lazy_static! {
-    static ref PRIMITIVE_TYPES: HashMap<&'static str, Type<'static>> = HashMap::from([
-        ("address", Type::Address),
-        ("bool", Type::Bool),
-        ("string", Type::String),
-        ("uint8", Type::Uint(8)),
-        ("uint16", Type::Uint(16)),
-        ("uint24", Type::Uint(24)),
-        ("uint32", Type::Uint(32)),
-        ("uint64", Type::Uint(64)),
-        ("uint128", Type::Uint(128)),
-        ("uint256", Type::Uint(256)),
-        ("int8", Type::Int(8)),
-        ("int16", Type::Int(16)),
-        ("int24", Type::Int(24)),
-        ("int32", Type::Int(32)),
-        ("int64", Type::Int(64)),
-        ("int128", Type::Int(128)),
-        ("int256", Type::Int(256)),
-        ("bytes", Type::Bytes),
-        ("bytes1", Type::FixedBytes(1)),
-        ("bytes2", Type::FixedBytes(2)),
-        ("bytes3", Type::FixedBytes(3)),
-        ("bytes4", Type::FixedBytes(4)),
-        ("bytes6", Type::FixedBytes(6)),
-        ("bytes5", Type::FixedBytes(5)),
-        ("bytes7", Type::FixedBytes(7)),
-        ("bytes8", Type::FixedBytes(8)),
-        ("bytes9", Type::FixedBytes(9)),
-        ("bytes10", Type::FixedBytes(10)),
-        ("bytes11", Type::FixedBytes(11)),
-        ("bytes12", Type::FixedBytes(12)),
-        ("bytes13", Type::FixedBytes(13)),
-        ("bytes14", Type::FixedBytes(14)),
-        ("bytes15", Type::FixedBytes(15)),
-        ("bytes16", Type::FixedBytes(16)),
-        ("bytes17", Type::FixedBytes(17)),
-        ("bytes18", Type::FixedBytes(18)),
-        ("bytes19", Type::FixedBytes(19)),
-        ("bytes20", Type::FixedBytes(20)),
-        ("bytes21", Type::FixedBytes(21)),
-        ("bytes22", Type::FixedBytes(22)),
-        ("bytes23", Type::FixedBytes(23)),
-        ("bytes24", Type::FixedBytes(24)),
-        ("bytes25", Type::FixedBytes(25)),
-        ("bytes26", Type::FixedBytes(26)),
-        ("bytes27", Type::FixedBytes(27)),
-        ("bytes28", Type::FixedBytes(28)),
-        ("bytes29", Type::FixedBytes(29)),
-        ("bytes30", Type::FixedBytes(30)),
-        ("bytes31", Type::FixedBytes(31)),
-        ("bytes32", Type::FixedBytes(32)),
-    ]);
+    static ref PRIMITIVE_TYPES: HashMap<&'static str, Type<'static>> = primitive_types();
+}
+
+fn primitive_types() -> HashMap<&'static str, Type<'static>> {
+    let mut names = Vec::new();
+    names.reserve(32 + 256 / 8 + 256 / 8);
+    for size in 1..=32 {
+        names.push(format!("bytes{}", size));
+    }
+    for size in (8..=256).step_by(8) {
+        names.push(format!("int{}", size));
+    }
+    for size in (8..=256).step_by(8) {
+        names.push(format!("uint{}", size));
+    }
+    let names: &'static [String] = names.leak();
+
+    let mut types: HashMap<&'static str, Type<'static>> = HashMap::new();
+    for (size, i) in (1..=32).zip(0..) {
+        types.insert(&names[i], Type::FixedBytes(size, &names[i]));
+    }
+    for (size, i) in (8..=256).step_by(8).zip(types.len()..) {
+        types.insert(&names[i], Type::Int(size, &names[i]));
+    }
+    for (size, i) in (8..=256).step_by(8).zip(types.len()..) {
+        types.insert(&names[i], Type::Uint(size, &names[i]));
+    }
+    types.insert("address", Type::Address);
+    types.insert("bool", Type::Bool);
+    types.insert("string", Type::String);
+    types.insert("bytes", Type::Bytes);
+    types
 }
 
 /// Type definitions without struct members.
@@ -77,12 +57,12 @@ pub(crate) enum Type<'a> {
     String,
 
     /// Unsigned integer.
-    Uint(usize),
+    Uint(usize, &'a str),
     /// Signed integer.
-    Int(usize),
+    Int(usize, &'a str),
 
     /// Array of bytes with fixed size.
-    FixedBytes(usize),
+    FixedBytes(usize, &'a str),
     /// Array type, with fixed size.
     FixedArray(
         usize,   // Array size.
@@ -124,11 +104,11 @@ impl<'a> Type<'a> {
     pub(crate) fn is_valid(&self) -> bool {
         match self {
             Type::Address | Type::Bool | Type::Bytes | Type::String => true,
-            Type::Uint(size) | Type::Int(size) => match size {
+            Type::Uint(size, _) | Type::Int(size, _) => match size {
                 8 | 16 | 32 | 64 | 128 | 256 => true,
                 _ => false,
             },
-            Type::FixedBytes(size) if 0 < *size && *size <= 32 => true,
+            Type::FixedBytes(size, _) if 0 < *size && *size <= 32 => true,
             Type::FixedArray(_, _, _) | Type::Array(_, _) | Type::Struct(_) => true,
             _ => false,
         }
@@ -143,54 +123,10 @@ impl<'a> Type<'a> {
             Type::Bool => "bool",
             Type::Bytes => "bytes",
             Type::String => "string",
-            Type::Uint(8) => "uint8",
-            Type::Uint(16) => "uint16",
-            Type::Uint(24) => "uint24",
-            Type::Uint(32) => "uint32",
-            Type::Uint(64) => "uint64",
-            Type::Uint(128) => "uint128",
-            Type::Uint(256) => "uint256",
-            Type::Int(8) => "int8",
-            Type::Int(16) => "int16",
-            Type::Int(24) => "int24",
-            Type::Int(32) => "int32",
-            Type::Int(64) => "int64",
-            Type::Int(128) => "int128",
-            Type::Int(256) => "int256",
-            Type::FixedBytes(1) => "bytes1",
-            Type::FixedBytes(2) => "bytes2",
-            Type::FixedBytes(3) => "bytes3",
-            Type::FixedBytes(4) => "bytes4",
-            Type::FixedBytes(5) => "bytes5",
-            Type::FixedBytes(6) => "bytes6",
-            Type::FixedBytes(7) => "bytes7",
-            Type::FixedBytes(8) => "bytes8",
-            Type::FixedBytes(9) => "bytes9",
-            Type::FixedBytes(10) => "bytes10",
-            Type::FixedBytes(11) => "bytes11",
-            Type::FixedBytes(12) => "bytes12",
-            Type::FixedBytes(13) => "bytes13",
-            Type::FixedBytes(14) => "bytes14",
-            Type::FixedBytes(15) => "bytes15",
-            Type::FixedBytes(16) => "bytes16",
-            Type::FixedBytes(17) => "bytes17",
-            Type::FixedBytes(18) => "bytes18",
-            Type::FixedBytes(19) => "bytes19",
-            Type::FixedBytes(20) => "bytes20",
-            Type::FixedBytes(21) => "bytes21",
-            Type::FixedBytes(22) => "bytes22",
-            Type::FixedBytes(23) => "bytes23",
-            Type::FixedBytes(24) => "bytes24",
-            Type::FixedBytes(25) => "bytes25",
-            Type::FixedBytes(26) => "bytes26",
-            Type::FixedBytes(27) => "bytes27",
-            Type::FixedBytes(28) => "bytes28",
-            Type::FixedBytes(29) => "bytes29",
-            Type::FixedBytes(30) => "bytes30",
-            Type::FixedBytes(31) => "bytes31",
-            Type::FixedBytes(32) => "bytes32",
+            Type::Uint(_, name) => name,
+            Type::Int(_, name) => name,
+            Type::FixedBytes(_, name) => name,
             Type::FixedArray(_, name, _) | Type::Array(name, _) | Type::Struct(name) => name,
-            _ => "<invalid>",
         }
     }
 
@@ -214,7 +150,11 @@ impl<'a> Type<'a> {
     /// Returns `true` if this type is atomic.
     pub(crate) fn is_atomic(&self) -> bool {
         match self {
-            Type::Address | Type::Bool | Type::Uint(_) | Type::Int(_) | Type::FixedBytes(_) => true,
+            Type::Address
+            | Type::Bool
+            | Type::Uint(_, _)
+            | Type::Int(_, _)
+            | Type::FixedBytes(_, _) => true,
             _ => false,
         }
     }
@@ -421,19 +361,12 @@ mod tests {
 
     #[test]
     fn type_try_from_name_uint() {
-        for (type_name, expected_size) in [
-            ("uint8", 8),
-            ("uint16", 16),
-            ("uint24", 24),
-            ("uint32", 32),
-            ("uint64", 64),
-            ("uint128", 128),
-            ("uint256", 256),
-        ] {
-            let type_ =
-                Type::try_from_name(type_name).expect(format!("`{:?}` parses", type_name).as_str());
+        for expected_size in (8..=256).step_by(8) {
+            let type_name = format!("uint{}", expected_size);
+            let type_ = Type::try_from_name(&type_name)
+                .expect(format!("`{:?}` parses", type_name).as_str());
             match type_ {
-                Type::Uint(size) if size == expected_size => (),
+                Type::Uint(size, _) if size == expected_size => (),
                 _ => panic!("expected {}", type_name),
             }
 
@@ -459,19 +392,12 @@ mod tests {
 
     #[test]
     fn type_try_from_name_int() {
-        for (type_name, expected_size) in [
-            ("int8", 8),
-            ("int16", 16),
-            ("int24", 24),
-            ("int32", 32),
-            ("int64", 64),
-            ("int128", 128),
-            ("int256", 256),
-        ] {
-            let type_ =
-                Type::try_from_name(type_name).expect(format!("`{:?}` parses", type_name).as_str());
+        for expected_size in (8..=256).step_by(8) {
+            let type_name = format!("int{}", expected_size);
+            let type_ = Type::try_from_name(&type_name)
+                .expect(format!("`{:?}` parses", type_name).as_str());
             match type_ {
-                Type::Int(size) if size == expected_size => (),
+                Type::Int(size, _) if size == expected_size => (),
                 _ => panic!("expected {}", type_name),
             }
 
@@ -497,44 +423,12 @@ mod tests {
 
     #[test]
     fn type_try_from_name_fixed_bytes() {
-        for (type_name, expected_size) in [
-            ("bytes1", 1),
-            ("bytes2", 2),
-            ("bytes3", 3),
-            ("bytes4", 4),
-            ("bytes5", 5),
-            ("bytes6", 6),
-            ("bytes7", 7),
-            ("bytes8", 8),
-            ("bytes9", 9),
-            ("bytes10", 10),
-            ("bytes11", 11),
-            ("bytes12", 12),
-            ("bytes13", 13),
-            ("bytes14", 14),
-            ("bytes15", 15),
-            ("bytes16", 16),
-            ("bytes17", 17),
-            ("bytes18", 18),
-            ("bytes19", 19),
-            ("bytes20", 20),
-            ("bytes21", 21),
-            ("bytes22", 22),
-            ("bytes23", 23),
-            ("bytes24", 24),
-            ("bytes25", 25),
-            ("bytes26", 26),
-            ("bytes27", 27),
-            ("bytes28", 28),
-            ("bytes29", 29),
-            ("bytes30", 30),
-            ("bytes31", 31),
-            ("bytes32", 32),
-        ] {
-            let type_ =
-                Type::try_from_name(type_name).expect(format!("`{:?}` parses", type_name).as_str());
+        for expected_size in 1..=32 {
+            let type_name = format!("bytes{}", expected_size);
+            let type_ = Type::try_from_name(&type_name)
+                .expect(format!("`{:?}` parses", type_name).as_str());
             match type_ {
-                Type::FixedBytes(size) if size == expected_size => (),
+                Type::FixedBytes(size, _) if size == expected_size => (),
                 _ => panic!("expected {}", type_name),
             }
 
@@ -615,7 +509,7 @@ mod tests {
         assert!(!type_.is_struct_ref());
 
         let remove_reference = type_.remove_reference().unwrap();
-        assert_eq!(remove_reference, Type::Uint(8));
+        assert_eq!(remove_reference, Type::Uint(8, "uint8"));
     }
 
     #[test]
@@ -635,7 +529,7 @@ mod tests {
         assert!(!type_.is_struct_ref());
 
         let remove_reference = type_.remove_reference().unwrap();
-        assert_eq!(remove_reference, Type::Uint(8));
+        assert_eq!(remove_reference, Type::Uint(8, "uint8"));
     }
 
     #[test]
@@ -734,10 +628,11 @@ mod tests {
     fn type_hash_uint() {
         for size in [8, 16, 32, 64, 128, 256] {
             let mut buf = BufHasher::default();
-            Type::Uint(size).hash(&mut buf);
+            let name = format!("uint{}", size);
+            Type::Uint(size, &name).hash(&mut buf);
 
             let type_name = String::from_utf8(buf.0).unwrap();
-            assert_eq!(type_name, format!("uint{}", size));
+            assert_eq!(type_name, name);
         }
     }
 
@@ -745,10 +640,11 @@ mod tests {
     fn type_hash_int() {
         for size in [8, 16, 32, 64, 128, 256] {
             let mut buf = BufHasher::default();
-            Type::Int(size).hash(&mut buf);
+            let name = format!("int{}", size);
+            Type::Int(size, &name).hash(&mut buf);
 
             let type_name = String::from_utf8(buf.0).unwrap();
-            assert_eq!(type_name, format!("int{}", size));
+            assert_eq!(type_name, name);
         }
     }
 
@@ -756,10 +652,11 @@ mod tests {
     fn type_hash_fixed_bytes() {
         for size in 1usize..=32usize {
             let mut buf = BufHasher::default();
-            Type::FixedBytes(size).hash(&mut buf);
+            let name = format!("bytes{}", size);
+            Type::FixedBytes(size, &name).hash(&mut buf);
 
             let type_name = String::from_utf8(buf.0).unwrap();
-            assert_eq!(type_name, format!("bytes{}", size));
+            assert_eq!(type_name, name);
         }
     }
 

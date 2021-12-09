@@ -171,7 +171,7 @@ impl<'a> Hasher<'a> {
                     Err(anyhow!("expected string got {}", value))
                 }
             }
-            Type::Int(size) if type_.is_valid() => {
+            Type::Int(size, _) if type_.is_valid() => {
                 let int_value = match value {
                     serde_json::Value::Number(number) => {
                         if let Some(val) = number.as_u64() {
@@ -208,7 +208,7 @@ impl<'a> Hasher<'a> {
                     Err(anyhow!("invalid int{} {}", size, value))
                 }
             }
-            Type::Uint(size) if type_.is_valid() => {
+            Type::Uint(size, _) if type_.is_valid() => {
                 let int_value = match value {
                     serde_json::Value::Number(number) => BigUint::from(
                         number
@@ -231,7 +231,7 @@ impl<'a> Hasher<'a> {
                     Err(anyhow!("invalid uint{} {}", size, value))
                 }
             }
-            Type::FixedBytes(size) if type_.is_valid() => {
+            Type::FixedBytes(size, _) if type_.is_valid() => {
                 if let serde_json::Value::String(hex) = value {
                     let hex = hex.strip_prefix("0x").unwrap_or(hex);
                     if hex.len() != size * 2 {
