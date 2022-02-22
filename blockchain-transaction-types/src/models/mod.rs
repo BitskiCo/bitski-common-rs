@@ -10,7 +10,11 @@ pub mod ethereum_transaction;
 #[cfg(feature = "all-chains")]
 pub mod known_message_type;
 #[cfg(feature = "all-chains")]
+pub mod known_meta_transaction_types;
+#[cfg(feature = "all-chains")]
 pub mod known_transaction_type;
 pub mod message;
 pub mod transaction;
 pub mod transaction_info;
+#[cfg(feature = "ethereum")]
+pub mod wyvern;

@@ -1,5 +1,7 @@
 use crate::models::error::Error;
+use crate::models::transaction_info::TransactionInfo;
 use std::future::Future;
+use thiserror::Error as ThisError;
 
 pub trait Message {
     fn from_json(json: serde_json::Value) -> Result<Self, Error>
@@ -11,6 +13,8 @@ pub trait Message {
         Self: Sized;
 
     fn message_info(&self) -> MessageInfo;
+
+    fn meta_transaction_info(&self) -> Option<TransactionInfo>;
 }
 
 pub enum MessageInfo {
@@ -21,8 +25,6 @@ pub enum MessageInfo {
 pub trait SignableMessage: Message {
     fn message_hash(&self, chain_id: u64) -> Result<Vec<u8>, Error>;
 }
-
-use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum SignError<E> {

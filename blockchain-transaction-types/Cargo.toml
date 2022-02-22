@@ -14,6 +14,9 @@ solana-sdk = {version = "1.8", default-features = false, optional = true}
 thiserror = "1.0"
 tiny-keccak = {version = "2.0", default-features = false, optional = true}
 secp256k1 = {version = "0.20", default-features = false, optional = true}
+bigdecimal = {version = "0.3", features = ["serde"]}
+ethabi = {version = "16.0", default-features = false, features = ["full-serde"], optional = true}
+lazy_static = {version = "1.4", default-features = false, optional = true}
 
 # Use newer web3 crate for EIP-1552 support.
 [dependencies.web3]
@@ -31,7 +34,7 @@ tokio = {version = "1.0", features = ["test-util", "macros"], default-features =
 [features]
 default = ["all-chains"]
 all-chains = ["ethereum", "solana"]
-ethereum = ["web3", "tiny-keccak", "secp256k1", "bitski-eip-712"]
+ethereum = ["web3", "tiny-keccak", "secp256k1", "bitski-eip-712", "ethabi"]
 solana = ["solana-sdk/full"]
 signing = ["web3-signing"]
 web3-signing = ["web3/signing"]

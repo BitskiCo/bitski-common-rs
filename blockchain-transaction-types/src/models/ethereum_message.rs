@@ -1,5 +1,7 @@
 use crate::models::error::Error;
+use crate::models::known_meta_transaction_types::known_typed_data_meta_transaction;
 use crate::models::message::{MessageInfo, SignableMessage};
+use crate::models::transaction_info::TransactionInfo;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -8,15 +10,14 @@ use serde_json::Value;
 pub enum Message {
     String(String),
     TypedData(bitski_eip_712::TypedData),
-    
 }
 
 impl crate::models::message::Message for Message {
-    fn from_json(_json: Value) -> Result<Self, Error>
+    fn from_json(json: Value) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        todo!()
+        Ok(serde_json::from_value(json)?)
     }
 
     fn from_raw(_bytes: &[u8]) -> Result<Self, Error>
@@ -28,6 +29,13 @@ impl crate::models::message::Message for Message {
 
     fn message_info(&self) -> MessageInfo {
         todo!()
+    }
+
+    fn meta_transaction_info(&self) -> Option<TransactionInfo> {
+        match self {
+            Message::String(_) => None,
+            Message::TypedData(data) => known_typed_data_meta_transaction(data),
+        }
     }
 }
 
