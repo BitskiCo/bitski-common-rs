@@ -1,7 +1,6 @@
 use crate::models::coin_type::CoinType;
 use crate::models::transaction_info::TransactionInfo;
 use crate::tests::helpers::signer::TestSigner;
-use hex::ToHex as _;
 use web3::types::Address;
 
 #[tokio::test]
@@ -91,17 +90,15 @@ fn test_1155_transfer_token_info() {
     let info = request_type.transaction_request().transaction_info();
 
     let from = format!("0x{:02x}", sender_address);
-    assert!(
-        matches!(
-            info,
-            TransactionInfo::TokenTransfer {
-                from,
-                to,
-                amount,
-                token_id,
-                token_info: None
-            }
-        ),
+    let expected_info = TransactionInfo::TokenTransfer {
+        from: from.to_lowercase(),
+        to: to.to_lowercase(),
+        amount,
+        token_id,
+        token_info: None,
+    };
+    assert_eq!(
+        info, expected_info,
         "Transaction should be a token transfer"
     );
 }
@@ -116,87 +113,6 @@ fn test_ethereum_address_token_info() {
         address.address(),
         "0xccbad6e6bc69d6f15d02a68f78b7869bd7ea7eed"
     );
-}
-
-#[tokio::test]
-async fn test_721_signature() {
-    let chain_id = 0;
-    let signer = TestSigner::new();
-    let sender_address = signer.ethereum_address();
-    let json = serde_json::json!({
-      "types": {
-        "EIP712Domain": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "version",
-            "type": "string"
-          },
-          {
-            "name": "chainId",
-            "type": "uint256"
-          },
-          {
-            "name": "verifyingContract",
-            "type": "address"
-          }
-        ],
-        "Person": [
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "wallet",
-            "type": "address"
-          }
-        ],
-        "Mail": [
-          {
-            "name": "from",
-            "type": "Person"
-          },
-          {
-            "name": "to",
-            "type": "Person"
-          },
-          {
-            "name": "contents",
-            "type": "string"
-          }
-        ]
-      },
-      "primaryType": "Mail",
-      "domain": {
-        "name": "Ether Mail",
-        "version": "1",
-        "chainId": 1,
-        "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"
-      },
-      "message": {
-        "from": {
-          "name": "Cow",
-          "wallet": "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"
-        },
-        "to": {
-          "name": "Bob",
-          "wallet": "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"
-        },
-        "contents": "Hello, Bob!"
-      }
-    });
-
-    let message = crate::known_message_type_from_json(json, CoinType::Ethereum, Some(chain_id))
-        .expect("Could not identify message")
-        .signable_message();
-    let (signature_bytes, recovery_id) = message
-        .sign_message(chain_id, move |message| {
-            signer.sign_recoverable(message, Some(chain_id))
-        })
-        .await
-        .expect("Could not sign transaction");
 }
 
 #[tokio::test]

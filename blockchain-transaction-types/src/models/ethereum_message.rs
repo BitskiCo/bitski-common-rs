@@ -7,8 +7,6 @@ use serde_json::Value;
 #[serde(untagged)]
 pub enum Message {
     String(String),
-    TypedData(bitski_eip_712::TypedData),
-    
 }
 
 impl crate::models::message::Message for Message {
@@ -40,10 +38,6 @@ impl SignableMessage for Message {
                 vec.append(&mut s);
                 vec
             }),
-            Message::TypedData(s) => s
-                .hash()
-                .map(|h| h.as_bytes().to_vec())
-                .or(Err(Error::InvalidData)),
         }
     }
 }

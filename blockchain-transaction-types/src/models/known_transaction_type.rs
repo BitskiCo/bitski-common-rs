@@ -1,6 +1,8 @@
 use crate::models::coin_type::CoinType;
 use crate::models::error::Error;
-use crate::models::transaction::{SignableTransactionRequest, TransactionRequest};
+#[cfg(feature = "signing")]
+use crate::models::transaction::SignableTransactionRequest;
+use crate::models::transaction::TransactionRequest;
 
 pub enum KnownTransactionRequestType {
     Ethereum(web3::types::TransactionRequest),
