@@ -1,5 +1,2 @@
 [workspace]
-members = [
-  "blockchain-transaction-types",
-  "eip-712",
-]
+members = ["bitski-common", "blockchain-transaction-types", "eip-712"]

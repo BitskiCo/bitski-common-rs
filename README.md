@@ -8,7 +8,7 @@ This is a collection of Rust crates that implement shared Bitski backend librari
 
 ### Prerequisites
 
-Install Rust and Cargo.
+Install Rust and Cargo. This library requires Rust 1.60 or higher.
 
 ### Installing
 
@@ -16,8 +16,8 @@ In `Cargo.toml` add the relevant dependencies:
 
 ```
 [dependencies]
-bitski-eip712 = {git = "https://github.com/BitskiCo/blockchain-transaction-types"}
-blockchain-transaction-types = {git = "https://github.com/BitskiCo/blockchain-transaction-types"}
+bitski-common = { git = "https://github.com/BitskiCo/bitski-common-rs" }
+blockchain-transaction-types = { git = "https://github.com/BitskiCo/bitski-common-rs" }
 ```
 
 ## Testing
