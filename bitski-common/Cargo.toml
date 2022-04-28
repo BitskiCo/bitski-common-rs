@@ -15,9 +15,8 @@ diesel = { version = "1.4.8", features = ["postgres", "r2d2"], optional = true }
 dotenv = "0.15.0"
 hyper = { version = "0.14.18", features = ["full"] }
 opentelemetry = { version = "0.17.0", features = ["rt-tokio-current-thread"] }
-opentelemetry-jaeger = { version = "0.16.0", features = [
-    "rt-tokio-current-thread",
-] }
+opentelemetry-otlp = { version = "0.10.0", features = ["metrics"] }
+opentelemetry-semantic-conventions = "0.9.0"
 opentelemetry-zipkin = "0.15.0"
 tokio = { version = "1.18.0", features = ["rt"] }
 tower = { version = "0.4.12", features = ["full"], optional = true }
@@ -25,6 +24,7 @@ tower-http = { version = "0.3.0", features = ["full"], optional = true }
 tracing = "0.1.34"
 tracing-opentelemetry = "0.17.2"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
+uuid = { version = "1.0.0", features = ["v4"] }
 
 [dev-dependencies]
 tonic = "0.7.1"
