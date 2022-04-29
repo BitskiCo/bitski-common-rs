@@ -1,5 +1,6 @@
 #[cfg(feature = "tower")]
-mod tower;
+#[cfg_attr(docsrs, doc(cfg(feature = "tower")))]
+pub mod tower;
 
 use anyhow::Result;
 use opentelemetry::{
@@ -16,16 +17,13 @@ use uuid::Uuid;
 
 use crate::env::{parse_env_or, parse_env_or_else};
 
-#[cfg(feature = "tower")]
-pub use self::tower::*;
-
 /// Initializes OpenTelemetry for tracing.
 ///
-/// An OTLP exporter is configured with the following env variables:
+/// An OTLP exporter is configured using the following env variables:
 ///
 /// - `SERVICE_NAMESPACE=?`
 /// - `SERVICE_NAME` defaults to the value of `CARGO_BIN_NAME` or `CARGO_PKG_NAME` at build time
-/// - `SERVICE_INSTANCE_ID` defaults to a random `UUID`
+/// - `SERVICE_INSTANCE_ID` defaults to a random [Uuid]
 /// - `SERVICE_VERSION` defaults to the value of `CARGO_PKG_VERSION` at build time
 /// - `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317`
 /// - `OTEL_EXPORTER_OTLP_TIMEOUT=10` in seconds
