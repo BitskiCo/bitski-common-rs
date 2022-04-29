@@ -20,7 +20,7 @@
 //! #[cfg(feature = "tower")]
 //! use bitski_common::{
 //!     env::{init_env, parse_env_addr},
-//!     instrumentation::{init_instruments, shutdown_instruments, PropagatingSpan},
+//!     instrumentation::{init_instruments, shutdown_instruments, tower::PropagatingSpan},
 //! };
 //!
 //! #[cfg(feature = "tower")]
@@ -64,7 +64,10 @@
 //! }
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #[cfg(feature = "diesel")]
+#[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
 pub mod diesel;
 pub mod env;
 pub mod instrumentation;
