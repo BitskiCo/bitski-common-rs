@@ -7,9 +7,9 @@ use web3::types::{
 };
 
 use crate::models::error::Error;
-use crate::models::transaction::{
-    IdentifyableTransction, SignableTransactionRequest, Transaction, TransactionRequest,
-};
+#[cfg(feature = "signing")]
+use crate::models::transaction::SignableTransactionRequest;
+use crate::models::transaction::{IdentifyableTransction, Transaction, TransactionRequest};
 use crate::models::transaction_info::TransactionInfo;
 
 #[cfg(feature = "signing")]
@@ -60,7 +60,7 @@ fn safe_transfer_from_transaction_info(data: &str) -> TransactionInfo {
     }
 }
 
-const SAFE_TRANSFER_FROM: &'static str = "0xf242432a";
+const SAFE_TRANSFER_FROM: &str = "0xf242432a";
 
 impl IdentifyableTransction for Web3Transaction {
     fn transaction_info(&self) -> TransactionInfo {
@@ -202,9 +202,9 @@ impl TransactionRequest for Web3TransactionRequest {
     }
 
     fn transaction_info(&self) -> TransactionInfo {
-        if self.value.clone().unwrap_or_default() > U256::zero()
+        if self.value.unwrap_or_default() > U256::zero()
             && self.to.is_some()
-            && self.data.clone().unwrap_or_default().0.len() == 0
+            && self.data.clone().unwrap_or_default().0.is_empty()
         {
             return TransactionInfo::TokenTransfer {
                 from: serde_json::json!(self.from)
@@ -235,7 +235,7 @@ impl TransactionRequest for Web3TransactionRequest {
             .unwrap_or_default()
             .to_owned();
         let method = if input.len() > METHOD_LENGTH {
-            input.clone()[0..METHOD_LENGTH].to_string()
+            input[0..METHOD_LENGTH].to_string()
         } else {
             String::new()
         };
@@ -294,18 +294,18 @@ fn parameters_from_request(
     request: &Web3TransactionRequest,
     chain_id: Option<u64>,
 ) -> Result<Web3TransactionParameters, Error> {
-    let gas = request.gas.clone().ok_or(Error::InvalidData)?;
-    let value = request.value.clone().ok_or(Error::InvalidData)?;
+    let gas = request.gas.ok_or(Error::InvalidData)?;
+    let value = request.value.ok_or(Error::InvalidData)?;
     let data = request.data.clone().ok_or(Error::InvalidData)?;
     Ok(Web3TransactionParameters {
-        nonce: request.nonce.clone(),
-        gas_price: request.gas_price.clone(),
+        nonce: request.nonce,
+        gas_price: request.gas_price,
         gas,
-        to: request.to.clone(),
+        to: request.to,
         value,
         data,
-        chain_id: chain_id,
-        transaction_type: request.transaction_type.clone(),
+        chain_id,
+        transaction_type: request.transaction_type,
         access_list: request.access_list.clone(),
         max_fee_per_gas: request.max_fee_per_gas,
         max_priority_fee_per_gas: request.max_priority_fee_per_gas,
