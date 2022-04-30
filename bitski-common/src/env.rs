@@ -7,7 +7,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Once;
 
-use anyhow::{Context as _, Result};
+use crate::{Error, Result};
 
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
@@ -46,12 +46,14 @@ where
     <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
-        Ok(s) => Ok(Some(s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        ))?)),
+        Ok(s) => Ok(Some(s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        })?)),
         Err(env::VarError::NotPresent) => Ok(None),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }
 
@@ -76,14 +78,17 @@ where
     <D as TryInto<T>>::Error: 'static + std::fmt::Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
-        Ok(s) => s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        )),
-        Err(env::VarError::NotPresent) => Ok(default
-            .try_into()
-            .with_context(|| format!("error parsing default value for env {name}"))?),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Ok(s) => s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        }),
+        Err(env::VarError::NotPresent) => Ok(default.try_into().map_err(|err| {
+            Error::internal()
+                .with_message(format!("error parsing default value for env {name}: {err}"))
+        })?),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }
 
@@ -109,13 +114,16 @@ where
     F: FnOnce() -> D,
 {
     match env::var(name) {
-        Ok(s) => s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        )),
-        Err(env::VarError::NotPresent) => Ok(default()
-            .try_into()
-            .with_context(|| format!("error parsing default value for env {name}"))?),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Ok(s) => s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        }),
+        Err(env::VarError::NotPresent) => Ok(default().try_into().map_err(|err| {
+            Error::internal()
+                .with_message(format!("error parsing default value for env {name}: {err}"))
+        })?),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }

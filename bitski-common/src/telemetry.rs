@@ -1,6 +1,5 @@
 //! # Utilities for telemetry.
 
-use anyhow::Result;
 use opentelemetry::{
     sdk::{trace, Resource},
     util::tokio_interval_stream,
@@ -14,6 +13,7 @@ use tracing_subscriber::prelude::*;
 use uuid::Uuid;
 
 use crate::env::{parse_env_or, parse_env_or_else};
+use crate::Result;
 
 /// Initializes OpenTelemetry for tracing.
 ///

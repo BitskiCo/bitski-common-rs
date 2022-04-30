@@ -11,8 +11,14 @@ pub mod actix_web;
 #[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
 pub mod diesel;
 pub mod env;
+pub mod error;
 pub mod task;
 pub mod telemetry;
 #[cfg(feature = "tower")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tower")))]
 pub mod tower;
+
+pub use crate::error::Error;
+
+/// [`Result`] with a default error type of [`Error`].
+pub type Result<T, E = Error> = std::result::Result<T, E>;

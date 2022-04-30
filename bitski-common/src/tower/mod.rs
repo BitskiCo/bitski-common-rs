@@ -43,7 +43,6 @@ mod span;
 
 use std::time::Duration;
 
-use anyhow::Result;
 use hyper::header;
 use tower::{
     layer::util::{Identity, Stack},
@@ -59,6 +58,7 @@ use tower_http::{
 
 pub use self::span::*;
 use crate::env::parse_env;
+use crate::Result;
 
 const DEFAULT_SERVER_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
