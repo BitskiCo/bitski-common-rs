@@ -1,3 +1,5 @@
+//! Utilities for Diesel.
+
 use anyhow::{Context as _, Result};
 use diesel::r2d2::{Pool, PooledConnection};
 use diesel::{pg::PgConnection, r2d2::ConnectionManager};

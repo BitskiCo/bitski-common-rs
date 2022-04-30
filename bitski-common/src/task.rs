@@ -1,3 +1,5 @@
+//! Utilities for spawning tasks.
+
 use std::future::Future;
 
 use opentelemetry::trace::FutureExt as _;
