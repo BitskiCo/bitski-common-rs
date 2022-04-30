@@ -16,7 +16,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 default = []
 
 actix-web = ["dep:actix-web", "actix-web-opentelemetry", "http"]
-diesel = ["dep:diesel", "diesel-tracing", "r2d2"]
+diesel = ["async-trait", "dep:diesel", "diesel-tracing", "r2d2"]
+test = []
 tonic = ["dep:tonic", "tower"]
 tower = ["dep:tower", "tower-http"]
 
@@ -26,6 +27,7 @@ actix-web-opentelemetry = { git = "https://github.com/BitskiCo/actix-web-opentel
     "metrics",
 ], optional = true }
 anyhow = "1.0.57"
+async-trait = { version = "0.1.53", optional = true }
 diesel = { version = "1.4.8", features = ["postgres", "r2d2"], optional = true }
 diesel-tracing = { version = "0.1.5", features = ["postgres"], optional = true }
 dotenv = "0.15.0"
