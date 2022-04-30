@@ -1,3 +1,5 @@
+//! Utilities for parsing env variables.
+
 use std::env;
 use std::fmt::Debug;
 use std::io::ErrorKind;

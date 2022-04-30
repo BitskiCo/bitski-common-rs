@@ -8,19 +8,26 @@ homepage = "https://github.com/BitskiCo/bitski-common-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[features]
-default = []
-diesel = ["dep:diesel"]
-tower = ["dep:tower", "tower-http"]
-
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[features]
+default = []
+
+actix-web = ["dep:actix-web", "actix-web-opentelemetry", "futures"]
+diesel = ["dep:diesel"]
+tower = ["dep:tower", "tower-http"]
+
 [dependencies]
+actix-web = { version = "4.0.1", optional = true }
+actix-web-opentelemetry = { git = "https://github.com/BitskiCo/actix-web-opentelemetry", features = [
+    "metrics",
+], optional = true }
 anyhow = "1.0.57"
 diesel = { version = "1.4.8", features = ["postgres", "r2d2"], optional = true }
 dotenv = "0.15.0"
+futures = { version = "0.3.21", optional = true }
 hyper = "0.14.18"
 opentelemetry = { version = "0.17.0", features = ["rt-tokio-current-thread"] }
 opentelemetry-otlp = { version = "0.10.0", features = ["metrics"] }
