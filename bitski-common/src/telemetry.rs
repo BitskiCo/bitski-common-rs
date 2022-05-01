@@ -1,6 +1,5 @@
 //! # Utilities for telemetry.
 
-use anyhow::Result;
 use opentelemetry::{
     sdk::{trace, Resource},
     util::tokio_interval_stream,
@@ -14,17 +13,35 @@ use tracing_subscriber::prelude::*;
 use uuid::Uuid;
 
 use crate::env::{parse_env_or, parse_env_or_else};
+use crate::Result;
+
+const DEFAULT_SERVICE_NAMESPACE: &str = "?";
 
 /// Initializes OpenTelemetry for tracing.
 ///
-/// An OTLP exporter is configured using the following env variables:
+/// The OTLP exporter configurable with the following env variables:
 ///
-/// - `SERVICE_NAMESPACE=?`
-/// - `SERVICE_NAME` defaults to the value of `CARGO_BIN_NAME` or `CARGO_PKG_NAME` at build time
-/// - `SERVICE_INSTANCE_ID` defaults to a random [Uuid]
-/// - `SERVICE_VERSION` defaults to the value of `CARGO_PKG_VERSION` at build time
-/// - `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317`
-/// - `OTEL_EXPORTER_OTLP_TIMEOUT=10` in seconds
+/// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` Sets the target to
+///   which the exporter is going to send spans or metrics.
+///
+/// * `OTEL_EXPORTER_OTLP_TIMEOUT=10` Sets the max waiting time for the backend
+///   to process each spans or metrics batch in seconds.
+///
+/// * `RUST_LOG=error` Sets the logging level for logs and spans. See
+///   [`tracing_subscriber::EnvFilter`].
+///
+/// * `SERVICE_NAMESPACE=?` Sets the Otel `service.namespace` resource value.
+///
+/// * `SERVICE_NAME=${CARGO_BIN_NAME:-$CARGO_PKG_NAME}` Sets the Otel
+///   `service.name` resource value. Defaults to the value of `CARGO_BIN_NAME`
+///   or `CARGO_PKG_NAME` at build time.
+///
+/// * `SERVICE_INSTANCE_ID=$(uuidgen)` Sets the Otel `service.instance.id`
+///   resource value. Defaults to a random [Uuid].
+///
+/// * `SERVICE_VERSION=${CARGO_PKG_VERSION}` Sets the Otel `service.version`
+///   resource value. Defaults to the value of `CARGO_PKG_VERSION` at build
+///   time.
 ///
 /// To override the configuration in Kubernetes:
 ///
@@ -98,7 +115,7 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
 }
 
 fn tracing_resources() -> Result<Vec<KeyValue>> {
-    let service_namespace: String = parse_env_or("SERVICE_NAMESPACE", "?")?;
+    let service_namespace: String = parse_env_or("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAMESPACE)?;
 
     let service_name: String = parse_env_or_else("SERVICE_NAME", || {
         option_env!("CARGO_BIN_NAME").unwrap_or(env!("CARGO_PKG_NAME"))

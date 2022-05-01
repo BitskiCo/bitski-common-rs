@@ -1,0 +1,69 @@
+name: Rust
+
+on:
+  pull_request:
+    paths:
+      - "**.rs"
+      - "**.sql"
+      - "**.toml"
+  push:
+    branches: [main]
+
+concurrency: 
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: ghcr.io/bitskico/bitski-internal-sdk:rust
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure Cache
+        uses: BitskiCo/cargo-cache-action@v1
+        with:
+          tag: test
+
+      - name: Sync Rustup with rust-toolchain.toml
+        run: rustup show
+
+      - name: Build
+        run: cargo build --all-features --all-targets --workspace
+
+      - name: Run cargo test
+        run: cargo test --all-features --all-targets --workspace
+
+  lint:
+    runs-on: ubuntu-latest
+    container: ghcr.io/bitskico/bitski-internal-sdk:rust
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure Cache
+        uses: BitskiCo/cargo-cache-action@v1
+        with:
+          tag: lint
+
+      - name: Sync Rustup with rust-toolchain.toml
+        run: rustup show
+
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --all-features --all-targets --workspace
+
+      - name: Run cargo clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --all-targets --workspace
+
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check

@@ -15,8 +15,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = []
 
-actix-web = ["dep:actix-web", "actix-web-opentelemetry", "futures"]
-diesel = ["dep:diesel"]
+actix-web = ["dep:actix-web", "actix-web-opentelemetry", "http"]
+diesel = ["async-trait", "dep:diesel", "diesel-tracing", "r2d2"]
+test = []
+tonic = ["dep:tonic", "tower"]
 tower = ["dep:tower", "tower-http"]
 
 [dependencies]
@@ -25,15 +27,19 @@ actix-web-opentelemetry = { git = "https://github.com/BitskiCo/actix-web-opentel
     "metrics",
 ], optional = true }
 anyhow = "1.0.57"
+async-trait = { version = "0.1.53", optional = true }
 diesel = { version = "1.4.8", features = ["postgres", "r2d2"], optional = true }
+diesel-tracing = { version = "0.1.5", features = ["postgres"], optional = true }
 dotenv = "0.15.0"
-futures = { version = "0.3.21", optional = true }
+http = { version = "0.2.7", optional = true }
 hyper = "0.14.18"
 opentelemetry = { version = "0.17.0", features = ["rt-tokio-current-thread"] }
 opentelemetry-otlp = { version = "0.10.0", features = ["metrics"] }
 opentelemetry-semantic-conventions = "0.9.0"
 opentelemetry-zipkin = "0.15.0"
+r2d2 = { version = "0.8.9", optional = true }
 tokio = { version = "1.18.0", features = ["rt"] }
+tonic = { version = "0.7.1", optional = true }
 tower = { version = "0.4.12", optional = true }
 tower-http = { version = "0.3.1", features = [
     "compression-full",
@@ -47,5 +53,4 @@ uuid = { version = "1.0.0", features = ["v4"] }
 
 [dev-dependencies]
 bitski-common = { path = ".", features = ["tower"] }
-tonic = "0.7.1"
 tonic-health = "0.6.0"

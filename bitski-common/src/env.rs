@@ -5,21 +5,18 @@ use std::fmt::Debug;
 use std::io::ErrorKind;
 use std::net::SocketAddr;
 use std::str::FromStr;
-use std::sync::Once;
 
-use anyhow::{Context as _, Result};
+use crate::{Error, Result};
 
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
-static INIT_ONCE: Once = Once::new();
-
 /// Initializes env variables from .env files.
 pub fn init_env() {
-    INIT_ONCE.call_once(|| match dotenv::dotenv() {
+    match dotenv::dotenv() {
         Ok(path) => tracing::info!("Loaded .env from {}", path.to_string_lossy()),
         Err(dotenv::Error::Io(err)) if err.kind() == ErrorKind::NotFound => (),
         Err(err) => tracing::warn!("Error loading .env: {err}"),
-    });
+    }
 }
 
 /// Parses the server listen from the `ADDR` env variable.
@@ -29,7 +26,7 @@ pub fn parse_env_addr() -> Result<SocketAddr> {
 
 /// Parses a value from an env variable.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env;
@@ -46,18 +43,20 @@ where
     <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
-        Ok(s) => Ok(Some(s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        ))?)),
+        Ok(s) => Ok(Some(s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        })?)),
         Err(env::VarError::NotPresent) => Ok(None),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }
 
 /// Parses a value from an env variable or a default value.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env_or;
@@ -76,20 +75,23 @@ where
     <D as TryInto<T>>::Error: 'static + std::fmt::Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
-        Ok(s) => s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        )),
-        Err(env::VarError::NotPresent) => Ok(default
-            .try_into()
-            .with_context(|| format!("error parsing default value for env {name}"))?),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Ok(s) => s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        }),
+        Err(env::VarError::NotPresent) => Ok(default.try_into().map_err(|err| {
+            Error::internal()
+                .with_message(format!("error parsing default value for env {name}: {err}"))
+        })?),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }
 
 /// Parses a value from an env variable or a default value.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env_or_else;
@@ -109,13 +111,16 @@ where
     F: FnOnce() -> D,
 {
     match env::var(name) {
-        Ok(s) => s.parse().context(format!(
-            "error parsing env {name} as {}",
-            std::any::type_name::<T>()
-        )),
-        Err(env::VarError::NotPresent) => Ok(default()
-            .try_into()
-            .with_context(|| format!("error parsing default value for env {name}"))?),
-        Err(err) => Err(err).context(format!("error parsing env {name}")),
+        Ok(s) => s.parse().map_err(|err| {
+            Error::internal().with_message(format!(
+                "error parsing env {name} as {}: {err}",
+                std::any::type_name::<T>()
+            ))
+        }),
+        Err(env::VarError::NotPresent) => Ok(default().try_into().map_err(|err| {
+            Error::internal()
+                .with_message(format!("error parsing default value for env {name}: {err}"))
+        })?),
+        Err(err) => Err(Error::internal().with_message(format!("error parsing env {name}: {err}"))),
     }
 }
