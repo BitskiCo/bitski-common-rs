@@ -23,12 +23,43 @@ pub type PgPooledConnection = PooledConnection<ConnectionManager<InstrumentedPgC
 /// An extension trait for [`PgPool`] that provides a variety of convenient adapters.
 #[async_trait]
 pub trait PgPoolExt {
-    /// Creates an instrumented Diesel PostgreSQL connection pool from env variables.
+    /// Creates an instrumented Diesel PostgreSQL connection pool from env
+    /// variables.
+    ///
+    ///
+    /// * `DATABASE_URL=postgres://root@localhost:5432/defaultdb` Sets the
+    ///   database URL.
+    ///
+    /// * `DATABASE_POOL_MIN_IDLE=1` Sets the minimum idle connection count
+    ///   maintained by the pool.
+    ///
+    /// * `DATABASE_POOL_MAX_SIZE=4` Sets the maximum number of connections
+    ///   managed by the pool.
     fn from_env() -> Result<Self>
     where
         Self: Sized;
 
     /// Executes the given function with a database connection.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use anyhow::Result;
+    /// use bitski_common::diesel::{PgPool, PgPoolExt as _};
+    /// use diesel::prelude::*;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<()> {
+    /// let db = PgPool::from_env()?;
+    ///
+    /// let count = db.with_conn(|conn| {
+    ///     conn.execute("SELECT 1")
+    /// }).await?;
+    ///
+    /// assert_eq!(count, 1);
+    /// # Ok(())
+    /// # }
+    /// ```
     async fn with_conn<F, R, E>(&self, f: F) -> Result<R, Error>
     where
         R: Send + 'static,

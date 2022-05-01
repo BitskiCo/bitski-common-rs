@@ -5,21 +5,18 @@ use std::fmt::Debug;
 use std::io::ErrorKind;
 use std::net::SocketAddr;
 use std::str::FromStr;
-use std::sync::Once;
 
 use crate::{Error, Result};
 
 const DEFAULT_ADDR: &str = "127.0.0.1:8080";
 
-static INIT_ONCE: Once = Once::new();
-
 /// Initializes env variables from .env files.
 pub fn init_env() {
-    INIT_ONCE.call_once(|| match dotenv::dotenv() {
+    match dotenv::dotenv() {
         Ok(path) => tracing::info!("Loaded .env from {}", path.to_string_lossy()),
         Err(dotenv::Error::Io(err)) if err.kind() == ErrorKind::NotFound => (),
         Err(err) => tracing::warn!("Error loading .env: {err}"),
-    });
+    }
 }
 
 /// Parses the server listen from the `ADDR` env variable.
@@ -29,7 +26,7 @@ pub fn parse_env_addr() -> Result<SocketAddr> {
 
 /// Parses a value from an env variable.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env;
@@ -59,7 +56,7 @@ where
 
 /// Parses a value from an env variable or a default value.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env_or;
@@ -94,7 +91,7 @@ where
 
 /// Parses a value from an env variable or a default value.
 ///
-/// Example:
+/// # Examples
 ///
 /// ```rust
 /// use bitski_common::env::parse_env_or_else;

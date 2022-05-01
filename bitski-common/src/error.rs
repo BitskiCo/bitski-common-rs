@@ -392,22 +392,22 @@ impl Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let repr = match self {
-            Error::Cancelled(_) => "cancelled",
-            Error::Unknown(_) => "unknown",
-            Error::InvalidArgument(_) => "invalid argument",
-            Error::DeadlineExceeded(_) => "deadline exceeded",
-            Error::NotFound(_) => "not found",
-            Error::AlreadyExists(_) => "already exists",
-            Error::PermissionDenied(_) => "permission denied",
-            Error::ResourceExhausted(_) => "resource exhausted",
-            Error::FailedPrecondition(_) => "failed precondition",
-            Error::Aborted(_) => "aborted",
-            Error::OutOfRange(_) => "out of range",
-            Error::Unimplemented(_) => "unimplemented",
-            Error::Internal(_) => "internal",
-            Error::Unavailable(_) => "unavailable",
-            Error::DataLoss(_) => "data loss",
-            Error::Unauthenticated(_) => "unauthenticated",
+            Error::Cancelled(_) => "Cancelled",
+            Error::Unknown(_) => "Unknown",
+            Error::InvalidArgument(_) => "Invalid Argument",
+            Error::DeadlineExceeded(_) => "Deadline Exceeded",
+            Error::NotFound(_) => "Not Found",
+            Error::AlreadyExists(_) => "Already Exists",
+            Error::PermissionDenied(_) => "Permission Denied",
+            Error::ResourceExhausted(_) => "Resource Exhausted",
+            Error::FailedPrecondition(_) => "Failed Precondition",
+            Error::Aborted(_) => "Aborted",
+            Error::OutOfRange(_) => "Out Of Range",
+            Error::Unimplemented(_) => "Unimplemented",
+            Error::Internal(_) => "Internal",
+            Error::Unavailable(_) => "Unavailable",
+            Error::DataLoss(_) => "Data Loss",
+            Error::Unauthenticated(_) => "Unauthenticated",
         };
 
         if let Some(message) = self.info().message.as_ref() {
@@ -659,13 +659,12 @@ impl From<tonic::metadata::errors::InvalidMetadataValueBytes> for Error {
     }
 }
 
-#[cfg(test)]
-mod test {
+#[cfg(all(test, feature = "actix-web"))]
+mod test_actix_web {
     use actix_web::ResponseError;
 
     use super::Error;
 
-    #[cfg(feature = "actix-web")]
     #[test]
     fn test_http_status_code_cancelled() {
         assert_eq!(Error::cancelled().status_code(), 499);
