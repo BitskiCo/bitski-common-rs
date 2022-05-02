@@ -1,7 +1,4 @@
-//! # bitski-common
-//!
-//! Bitski utilities for common tasks.
-
+#![doc = include_str!("../README.md")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "actix-web")]
@@ -17,6 +14,10 @@ pub mod telemetry;
 #[cfg(feature = "tower")]
 #[cfg_attr(docsrs, doc(cfg(feature = "tower")))]
 pub mod tower;
+
+#[cfg(feature = "actix-web")]
+pub use actix_web_opentelemetry;
+pub use opentelemetry;
 
 pub use crate::error::Error;
 

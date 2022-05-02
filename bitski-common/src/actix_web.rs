@@ -1,5 +1,7 @@
 //! # Utilities for Actix Web.
 
+pub use actix_web::*;
+
 /// Configures an Actix Web app with common middleware.
 ///
 /// Example:
@@ -13,7 +15,7 @@
 ///     telemetry::{init_instruments, shutdown_instruments},
 /// };
 ///
-/// async fn index(data: web::Path<(String, String)>) -> &'static str {
+/// async fn index() -> &'static str {
 ///     "Hello World!"
 /// }
 ///
@@ -22,15 +24,14 @@
 ///     init_env();
 ///     init_instruments()?;
 ///
+///     // listens on `localhost:8000`
 ///     let addr = parse_env_addr()?;
 ///     tracing::info!("Listening on {}", addr);
 ///
-///     HttpServer::new(move || {
-///         actix_web_app!().route("/", web::get().to(index))
-///     })
-///     .bind(addr)?
-///     .run()
-///     .await?;
+///     HttpServer::new(move || actix_web_app!().route("/", web::get().to(index)))
+///         .bind(addr)?
+///         .run()
+///         .await?;
 ///
 ///     shutdown_instruments()?;
 ///
@@ -43,12 +44,12 @@ macro_rules! actix_web_app {
         actix_web_app!(App::new())
     };
     ($app:expr) => {
-        $app.wrap(actix_web::middleware::Compress::default())
-            .wrap(actix_web_opentelemetry::RequestTracing::new())
+        $app.wrap($crate::actix_web::middleware::Compress::default())
+            .wrap($crate::actix_web_opentelemetry::RequestTracing::new())
             .wrap(
-                actix_web_opentelemetry::RequestMetricsBuilder::new()
-                    .build(opentelemetry::global::meter("actix_web")),
+                $crate::actix_web_opentelemetry::RequestMetricsBuilder::new()
+                    .build($crate::opentelemetry::global::meter("actix_web")),
             )
-            .wrap(actix_web::middleware::Logger::default())
+            .wrap($crate::actix_web::middleware::Logger::default())
     };
 }
