@@ -30,7 +30,7 @@ const DEFAULT_SERVER_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// ```rust,no_run
 /// use anyhow::Result;
 /// use bitski_common::{
-///     env::{init_env, parse_env_addr},
+///     env::{init_env, parse_env_addr_or_default},
 ///     telemetry::{init_instruments, shutdown_instruments},
 ///     tower::{BitskiLayer, BitskiLayerExt as _},
 /// };
@@ -49,7 +49,7 @@ const DEFAULT_SERVER_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 ///         .set_service_status("", tonic_health::ServingStatus::Serving)
 ///         .await;
 ///
-///     let addr = parse_env_addr()?;
+///     let addr = parse_env_addr_or_default()?;
 ///     tracing::info!("Listening on {}", addr);
 ///
 ///     Server::builder()

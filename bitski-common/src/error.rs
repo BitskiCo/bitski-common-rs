@@ -391,28 +391,27 @@ impl Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let repr = match self {
-            Error::Cancelled(_) => "Cancelled",
-            Error::Unknown(_) => "Unknown",
-            Error::InvalidArgument(_) => "Invalid Argument",
-            Error::DeadlineExceeded(_) => "Deadline Exceeded",
-            Error::NotFound(_) => "Not Found",
-            Error::AlreadyExists(_) => "Already Exists",
-            Error::PermissionDenied(_) => "Permission Denied",
-            Error::ResourceExhausted(_) => "Resource Exhausted",
-            Error::FailedPrecondition(_) => "Failed Precondition",
-            Error::Aborted(_) => "Aborted",
-            Error::OutOfRange(_) => "Out Of Range",
-            Error::Unimplemented(_) => "Unimplemented",
-            Error::Internal(_) => "Internal",
-            Error::Unavailable(_) => "Unavailable",
-            Error::DataLoss(_) => "Data Loss",
-            Error::Unauthenticated(_) => "Unauthenticated",
-        };
-
         if let Some(message) = self.info().message.as_ref() {
-            write!(f, "{repr}: {message}")
+            f.write_str(message)
         } else {
+            let repr = match self {
+                Error::Cancelled(_) => "Cancelled",
+                Error::Unknown(_) => "Unknown",
+                Error::InvalidArgument(_) => "Invalid Argument",
+                Error::DeadlineExceeded(_) => "Deadline Exceeded",
+                Error::NotFound(_) => "Not Found",
+                Error::AlreadyExists(_) => "Already Exists",
+                Error::PermissionDenied(_) => "Permission Denied",
+                Error::ResourceExhausted(_) => "Resource Exhausted",
+                Error::FailedPrecondition(_) => "Failed Precondition",
+                Error::Aborted(_) => "Aborted",
+                Error::OutOfRange(_) => "Out Of Range",
+                Error::Unimplemented(_) => "Unimplemented",
+                Error::Internal(_) => "Internal",
+                Error::Unavailable(_) => "Unavailable",
+                Error::DataLoss(_) => "Data Loss",
+                Error::Unauthenticated(_) => "Unauthenticated",
+            };
             f.write_str(repr)
         }
     }
@@ -443,6 +442,14 @@ impl From<opentelemetry::trace::TraceError> for Error {
 
 impl From<tokio::task::JoinError> for Error {
     fn from(err: tokio::task::JoinError) -> Self {
+        Error::internal().with_source(err)
+    }
+}
+
+#[cfg(feature = "actix")]
+#[cfg_attr(docsrs, doc(cfg(feature = "actix")))]
+impl From<actix::MailboxError> for Error {
+    fn from(err: actix::MailboxError) -> Self {
         Error::internal().with_source(err)
     }
 }
@@ -526,8 +533,7 @@ impl From<actix_web::error::ReadlinesError> for Error {
 #[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 impl ResponseError for Error {
     fn status_code(&self) -> http::StatusCode {
-        let info = self.info();
-        if let Some(status_code) = info.http_status_code {
+        if let Some(status_code) = self.info().http_status_code {
             return status_code;
         }
 
@@ -551,6 +557,101 @@ impl ResponseError for Error {
             Error::Unauthenticated(_) => http::StatusCode::UNAUTHORIZED,
         }
     }
+
+    fn error_response(&self) -> actix_web::HttpResponse {
+        match self {
+            Error::Cancelled(_)
+            | Error::Unknown(_)
+            | Error::InvalidArgument(_)
+            | Error::PermissionDenied(_)
+            | Error::Internal(_)
+            | Error::DeadlineExceeded(_)
+            | Error::ResourceExhausted(_)
+            | Error::Aborted(_)
+            | Error::Unimplemented(_)
+            | Error::Unavailable(_)
+            | Error::DataLoss(_)
+            | Error::Unauthenticated(_) => {
+                tracing::warn!("{self}");
+            }
+            _ => {}
+        }
+
+        actix_web::HttpResponse::build(self.status_code()).json(serde_json::json!({
+            "error": {
+                "message": self.to_string()
+            }
+        }))
+    }
+}
+
+#[cfg(feature = "awc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "awc")))]
+impl From<awc::error::PayloadError> for Error {
+    fn from(err: awc::error::PayloadError) -> Self {
+        Error::internal()
+            .with_http_status_code(err.status_code())
+            .with_source(err)
+    }
+}
+
+#[cfg(feature = "awc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "awc")))]
+impl From<awc::error::SendRequestError> for Error {
+    fn from(err: awc::error::SendRequestError) -> Self {
+        Error::internal().with_message(err.to_string())
+    }
+}
+
+#[cfg(feature = "awc")]
+#[cfg_attr(docsrs, doc(cfg(feature = "awc")))]
+impl From<awc::error::JsonPayloadError> for Error {
+    fn from(err: awc::error::JsonPayloadError) -> Self {
+        Error::internal().with_message(err.to_string())
+    }
+}
+
+#[cfg(feature = "oauth2")]
+impl<T: std::error::Error + Send + Sync + 'static>
+    From<
+        oauth2::RequestTokenError<
+            oauth2::reqwest::Error<T>,
+            oauth2::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
+        >,
+    > for Error
+{
+    fn from(
+        err: oauth2::RequestTokenError<
+            oauth2::reqwest::Error<T>,
+            oauth2::StandardErrorResponse<oauth2::basic::BasicErrorResponseType>,
+        >,
+    ) -> Self {
+        Error::internal()
+            .with_message(err.to_string())
+            .with_source(err)
+    }
+}
+
+#[cfg(feature = "reqwest")]
+#[cfg_attr(docsrs, doc(cfg(feature = "reqwest")))]
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Self {
+        match err.status() {
+            Some(status) => match status {
+                http::StatusCode::NOT_FOUND => Error::not_found().with_source(err),
+                http::StatusCode::TOO_MANY_REQUESTS => Error::resource_exhausted().with_source(err),
+                http::StatusCode::SERVICE_UNAVAILABLE | http::StatusCode::GATEWAY_TIMEOUT => {
+                    Error::unavailable().with_source(err)
+                }
+                _ => Error::internal()
+                    .with_message(err.to_string())
+                    .with_source(err),
+            },
+            None => Error::internal()
+                .with_message(err.to_string())
+                .with_source(err),
+        }
+    }
 }
 
 #[cfg(feature = "diesel")]
@@ -569,6 +670,30 @@ impl From<diesel::result::Error> for Error {
 impl From<r2d2::Error> for Error {
     fn from(err: r2d2::Error) -> Self {
         Error::unavailable().with_source(err)
+    }
+}
+
+#[cfg(feature = "bcrypt")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bcrypt")))]
+impl From<bcrypt::BcryptError> for Error {
+    fn from(err: bcrypt::BcryptError) -> Self {
+        Error::internal().with_source(err)
+    }
+}
+
+#[cfg(feature = "lettre")]
+#[cfg_attr(docsrs, doc(cfg(feature = "lettre")))]
+impl From<lettre::smtp::error::Error> for Error {
+    fn from(err: lettre::smtp::error::Error) -> Self {
+        Error::internal().with_message(format!("Error sending email: {}", err))
+    }
+}
+
+#[cfg(feature = "lettre")]
+#[cfg_attr(docsrs, doc(cfg(feature = "lettre")))]
+impl From<lettre_email::error::Error> for Error {
+    fn from(err: lettre_email::error::Error) -> Self {
+        Error::internal().with_message(format!("Error composing email: {}", err))
     }
 }
 

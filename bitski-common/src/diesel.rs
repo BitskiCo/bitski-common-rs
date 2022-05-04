@@ -3,7 +3,6 @@
 use async_trait::async_trait;
 use diesel::r2d2::ConnectionManager;
 use diesel::Connection as _;
-use diesel_tracing::pg::InstrumentedPgConnection;
 use r2d2::{Pool, PooledConnection};
 
 use crate::env::parse_env_or;
@@ -14,11 +13,14 @@ const DEFAULT_DATABASE_URL: &str = "postgres://root@localhost:5432/defaultdb";
 const DEFAULT_DATABASE_POOL_MIN_IDLE: u32 = 1;
 const DEFAULT_DATABASE_POOL_MAX_SIZE: u32 = 4;
 
-/// Instrumented PostgreSQL connection pool.
-pub type PgPool = Pool<ConnectionManager<InstrumentedPgConnection>>;
+/// PostgreSQL connection.
+pub type PgConnection = diesel::pg::PgConnection;
 
-/// Instrumented PostgreSQL connection from a connection pool.
-pub type PgPooledConnection = PooledConnection<ConnectionManager<InstrumentedPgConnection>>;
+/// PostgreSQL connection pool.
+pub type PgPool = Pool<ConnectionManager<PgConnection>>;
+
+/// PostgreSQL connection from a connection pool.
+pub type PgPooledConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 /// An extension trait for [`PgPool`] that provides a variety of convenient adapters.
 #[async_trait]
@@ -74,7 +76,7 @@ impl PgPoolExt for PgPool {
         let min_idle: u32 = parse_env_or("DATABASE_POOL_MIN_IDLE", DEFAULT_DATABASE_POOL_MIN_IDLE)?;
         let max_size: u32 = parse_env_or("DATABASE_POOL_MAX_SIZE", DEFAULT_DATABASE_POOL_MAX_SIZE)?;
 
-        let manager = ConnectionManager::<InstrumentedPgConnection>::new(database_url);
+        let manager = ConnectionManager::<PgConnection>::new(database_url);
 
         let builder = Pool::builder().min_idle(Some(min_idle)).max_size(max_size);
         #[cfg(feature = "test")]
