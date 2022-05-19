@@ -788,10 +788,19 @@ impl From<tonic::metadata::errors::InvalidMetadataValueBytes> for Error {
 #[cfg_attr(docsrs, doc(cfg(feature = "validator")))]
 impl From<validator::ValidationError> for Error {
     fn from(err: validator::ValidationError) -> Self {
-        let message = err.message.clone().unwrap_or_else(|| err.code.clone());
         Error::invalid_argument()
+            .with_message(err.message.clone().unwrap_or_else(|| err.code.clone()))
             .with_source(err)
-            .with_message(message)
+    }
+}
+
+#[cfg(feature = "validator")]
+#[cfg_attr(docsrs, doc(cfg(feature = "validator")))]
+impl From<validator::ValidationErrors> for Error {
+    fn from(err: validator::ValidationErrors) -> Self {
+        Error::invalid_argument()
+            .with_message(err.to_string())
+            .with_source(err)
     }
 }
 
