@@ -28,6 +28,7 @@ pub trait PgPoolExt {
     /// Creates an instrumented Diesel PostgreSQL connection pool from env
     /// variables.
     ///
+    /// Diesel is configurable with the following env variables:
     ///
     /// * `DATABASE_URL=postgres://root@localhost:5432/defaultdb` Sets the
     ///   database URL.
@@ -38,6 +39,17 @@ pub trait PgPoolExt {
     /// * `DATABASE_POOL_MAX_SIZE=4` Sets the maximum number of connections
     ///   managed by the pool.
     fn from_env() -> Result<Self>
+    where
+        Self: Sized;
+
+    /// Creates an instrumented Diesel PostgreSQL connection pool for testing.
+    ///
+    /// Diesel is configurable with the following env variables:
+    ///
+    /// * `DATABASE_URL=postgres://root@localhost:5432/defaultdb` Sets the
+    ///   database URL.
+    #[cfg(feature = "test")]
+    fn for_test() -> Result<Self>
     where
         Self: Sized;
 
@@ -80,11 +92,27 @@ impl PgPoolExt for PgPool {
 
         let builder = Pool::builder().min_idle(Some(min_idle)).max_size(max_size);
         #[cfg(feature = "test")]
-        let builder = builder.min_idle(None).max_size(1);
+        let builder = builder.min_idle(Some(1)).max_size(1);
 
         let pool = builder.build(manager)?;
 
         #[cfg(feature = "test")]
+        pool.get()?.begin_test_transaction()?;
+
+        Ok(pool)
+    }
+
+    #[cfg(feature = "test")]
+    fn for_test() -> Result<Self> {
+        let database_url: String = parse_env_or("DATABASE_URL", DEFAULT_DATABASE_URL)?;
+
+        let manager = ConnectionManager::<PgConnection>::new(database_url);
+
+        let pool = Pool::builder()
+            .min_idle(Some(1))
+            .max_size(1)
+            .build(manager)?;
+
         pool.get()?.begin_test_transaction()?;
 
         Ok(pool)
