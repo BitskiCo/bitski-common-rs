@@ -784,6 +784,17 @@ impl From<tonic::metadata::errors::InvalidMetadataValueBytes> for Error {
     }
 }
 
+#[cfg(feature = "validator")]
+#[cfg_attr(docsrs, doc(cfg(feature = "validator")))]
+impl From<validator::ValidationError> for Error {
+    fn from(err: validator::ValidationError) -> Self {
+        let message = err.message.clone().unwrap_or_else(|| err.code.clone());
+        Error::invalid_argument()
+            .with_source(err)
+            .with_message(message)
+    }
+}
+
 #[cfg(all(test, feature = "actix-web"))]
 mod test_actix_web {
     use actix_web::ResponseError;
