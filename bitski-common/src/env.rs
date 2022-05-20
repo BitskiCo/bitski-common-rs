@@ -85,6 +85,35 @@ where
     }
 }
 
+/// Parses a required value from an env variable.
+///
+/// # Examples
+///
+/// ```rust
+/// # use anyhow::Result;
+/// use bitski_common::env::require_env;
+///
+/// # fn main() -> Result<()> {
+/// let cargo_pkg_name: String = require_env("CARGO_PKG_NAME")?;
+/// assert_eq!(cargo_pkg_name, "bitski-common");
+///
+/// let foobar = require_env::<u32>("FOOBAR");
+/// assert!(foobar.is_err());
+/// # Ok(())
+/// # }
+/// ```
+pub fn require_env<T>(name: &'static str) -> Result<T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
+{
+    match parse_env(name) {
+        Ok(Some(value)) => Ok(value),
+        Ok(None) => Err(Error::not_found().with_message(format!("Missing required env {name}"))),
+        Err(err) => Err(err),
+    }
+}
+
 /// Parses a value from an env variable or a default value.
 ///
 /// # Examples
@@ -242,6 +271,36 @@ where
         Err(err) => {
             Err(Error::invalid_argument().with_message(format!("Error parsing env {name}: {err}")))
         }
+    }
+}
+
+/// Parses a comma separated list of required values from an env variable.
+///
+/// # Examples
+///
+/// ```rust
+/// # use anyhow::Result;
+/// use bitski_common::env::require_env_list;
+///
+/// # fn main() -> Result<()> {
+/// std::env::set_var("FOOBAR", "foo,bar");
+/// let foobar: Vec<String> = require_env_list("FOOBAR")?;
+/// assert_eq!(foobar, vec!["foo".to_string(), "bar".to_string()]);
+///
+/// let barbaz = require_env_list::<u32>("BARBAZ");
+/// assert!(barbaz.is_err());
+/// # Ok(())
+/// # }
+/// ```
+pub fn require_env_list<T>(name: &'static str) -> Result<Vec<T>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
+{
+    match parse_env_list(name) {
+        Ok(Some(value)) => Ok(value),
+        Ok(None) => Err(Error::not_found().with_message(format!("Missing required env {name}"))),
+        Err(err) => Err(err),
     }
 }
 
