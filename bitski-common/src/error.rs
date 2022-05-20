@@ -428,6 +428,12 @@ impl std::error::Error for Error {
     }
 }
 
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Error::internal().with_source(err)
+    }
+}
+
 impl From<opentelemetry::metrics::MetricsError> for Error {
     fn from(err: opentelemetry::metrics::MetricsError) -> Self {
         Error::internal().with_source(err)
