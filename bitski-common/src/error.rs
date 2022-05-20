@@ -428,6 +428,12 @@ impl std::error::Error for Error {
     }
 }
 
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Error::internal().with_source(err)
+    }
+}
+
 impl From<opentelemetry::metrics::MetricsError> for Error {
     fn from(err: opentelemetry::metrics::MetricsError) -> Self {
         Error::internal().with_source(err)
@@ -660,6 +666,20 @@ impl From<diesel::result::Error> for Error {
     fn from(err: diesel::result::Error) -> Self {
         match err {
             diesel::result::Error::NotFound => Error::not_found().with_source(err),
+            _ => Error::internal().with_source(err),
+        }
+    }
+}
+
+#[cfg(feature = "diesel")]
+#[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
+impl From<diesel::result::ConnectionError> for Error {
+    fn from(err: diesel::result::ConnectionError) -> Self {
+        match err {
+            diesel::result::ConnectionError::BadConnection(_)
+            | diesel::result::ConnectionError::CouldntSetupConfiguration(_) => {
+                Error::unavailable().with_source(err)
+            }
             _ => Error::internal().with_source(err),
         }
     }
