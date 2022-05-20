@@ -667,6 +667,20 @@ impl From<diesel::result::Error> for Error {
 
 #[cfg(feature = "diesel")]
 #[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
+impl From<diesel::result::ConnectionError> for Error {
+    fn from(err: diesel::result::ConnectionError) -> Self {
+        match err {
+            diesel::result::ConnectionError::BadConnection(_)
+            | diesel::result::ConnectionError::CouldntSetupConfiguration(_) => {
+                Error::unavailable().with_source(err)
+            }
+            _ => Error::internal().with_source(err),
+        }
+    }
+}
+
+#[cfg(feature = "diesel")]
+#[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
 impl From<r2d2::Error> for Error {
     fn from(err: r2d2::Error) -> Self {
         Error::unavailable().with_source(err)
