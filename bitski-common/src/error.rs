@@ -685,8 +685,8 @@ impl From<diesel::result::ConnectionError> for Error {
     }
 }
 
-#[cfg(feature = "diesel")]
-#[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
+#[cfg(feature = "r2d2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r2d2")))]
 impl From<r2d2::Error> for Error {
     fn from(err: r2d2::Error) -> Self {
         Error::unavailable().with_source(err)

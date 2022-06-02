@@ -1,8 +1,7 @@
 //! Utilities for Diesel.
 
 use async_trait::async_trait;
-use diesel::r2d2::ConnectionManager;
-use r2d2::{Pool, PooledConnection};
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 
 use crate::env::parse_env_or;
 use crate::task::spawn_blocking;
