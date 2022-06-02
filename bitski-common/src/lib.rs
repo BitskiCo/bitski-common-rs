@@ -4,7 +4,7 @@
 #[cfg(feature = "actix-web")]
 #[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 pub mod actix_web;
-#[cfg(feature = "diesel")]
+#[cfg(all(feature = "diesel", feature = "postgres", feature = "r2d2"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "diesel")))]
 pub mod diesel;
 pub mod env;

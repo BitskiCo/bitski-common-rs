@@ -23,6 +23,8 @@ bcrypt = ["dep:bcrypt"]
 diesel = ["async-trait", "dep:diesel", "r2d2"]
 lettre = ["dep:lettre", "lettre_email"]
 oauth2 = ["dep:oauth2"]
+postgres = ["diesel", "diesel/postgres"]
+r2d2 = ["dep:r2d2"]
 reqwest = ["dep:reqwest"]
 test = []
 tonic = ["dep:tonic", "tower"]
@@ -41,7 +43,7 @@ awc = { version = "3.0.0", default-features = false, optional = true }
 bcrypt = { version = "0.13.0", default-features = false, features = [
     "std",
 ], optional = true }
-diesel = { version = "1.4.8", features = ["postgres", "r2d2"], optional = true }
+diesel = { version = "1.4.8", features = ["r2d2"], optional = true }
 dotenv = "0.15.0"
 http = { version = "0.2.7", optional = true }
 hyper = "0.14.18"

@@ -11,7 +11,7 @@ pub use actix_web::*;
 /// use anyhow::Result;
 /// use bitski_common::{
 ///     actix_web_app,
-///     env::{init_env, parse_env_addr},
+///     env::{init_env, parse_env_addr_or_default},
 ///     telemetry::{init_instruments, shutdown_instruments},
 /// };
 ///
@@ -25,7 +25,7 @@ pub use actix_web::*;
 ///     init_instruments()?;
 ///
 ///     // listens on `localhost:8000`
-///     let addr = parse_env_addr()?;
+///     let addr = parse_env_addr_or_default()?;
 ///     tracing::info!("Listening on {}", addr);
 ///
 ///     HttpServer::new(move || actix_web_app!().route("/", web::get().to(index)))
