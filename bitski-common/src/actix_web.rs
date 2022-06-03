@@ -12,7 +12,7 @@ pub use actix_web::*;
 /// use bitski_common::{
 ///     actix_web_app,
 ///     env::{init_env, parse_env_addr_or_default},
-///     telemetry::{init_instruments, shutdown_instruments},
+///     init_instruments, shutdown_instruments,
 /// };
 ///
 /// async fn index() -> &'static str {
@@ -22,7 +22,7 @@ pub use actix_web::*;
 /// #[actix_web::main]
 /// async fn main() -> Result<()> {
 ///     init_env();
-///     init_instruments()?;
+///     init_instruments!()?;
 ///
 ///     // listens on `localhost:8000`
 ///     let addr = parse_env_addr_or_default()?;

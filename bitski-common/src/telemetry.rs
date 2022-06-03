@@ -73,8 +73,22 @@ const DEFAULT_SERVICE_NAMESPACE: &str = "?";
 ///             fieldRef:
 ///               fieldPath: metadata.labels.version
 /// ```
-pub fn init_instruments() -> Result<()> {
-    let resources = tracing_resources()?;
+#[macro_export]
+macro_rules! init_instruments {
+    () => {
+        $crate::telemetry::init_instruments_with_defaults(
+            option_env!("CARGO_BIN_NAME").unwrap_or(env!("CARGO_PKG_NAME")),
+            env!("CARGO_PKG_VERSION"),
+        )
+    };
+}
+
+#[doc(hidden)]
+pub fn init_instruments_with_defaults(
+    default_service_name: &str,
+    default_service_version: &str,
+) -> Result<()> {
+    let resources = tracing_resources(default_service_name, default_service_version)?;
 
     init_metrics(&resources)?;
     init_tracing(&resources)?;
@@ -114,18 +128,15 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     Ok(())
 }
 
-fn tracing_resources() -> Result<Vec<KeyValue>> {
+fn tracing_resources(
+    default_service_name: &str,
+    default_service_version: &str,
+) -> Result<Vec<KeyValue>> {
     let service_namespace: String = parse_env_or("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAMESPACE)?;
-
-    let service_name: String = parse_env_or_else("SERVICE_NAME", || {
-        option_env!("CARGO_BIN_NAME").unwrap_or(env!("CARGO_PKG_NAME"))
-    })?;
-
+    let service_name: String = parse_env_or("SERVICE_NAME", default_service_name)?;
     let service_instance_id: String =
         parse_env_or_else("SERVICE_INSTANCE_ID", || Uuid::new_v4().to_string())?;
-
-    let service_version: String =
-        parse_env_or_else("SERVICE_VERSION", || env!("CARGO_PKG_VERSION"))?;
+    let service_version: String = parse_env_or("SERVICE_VERSION", default_service_version)?;
 
     let resources = vec![
         KeyValue::new(SERVICE_NAMESPACE, service_namespace),
