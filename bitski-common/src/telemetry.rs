@@ -11,8 +11,11 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_semantic_conventions::resource::{
     SERVICE_INSTANCE_ID, SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
 };
+use sentry::ClientInitGuard;
 use tracing_subscriber::prelude::*;
 use uuid::Uuid;
+
+use std::env;
 
 use crate::env::{parse_env_or, parse_env_or_else};
 use crate::Result;
@@ -96,6 +99,8 @@ fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
 fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
 
+    let _guard = init_sentry();
+
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_trace_config(trace::config().with_resource(Resource::new(resources.to_owned())))
@@ -106,6 +111,7 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer().with_ansi(false))
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .with(sentry_tracing::layer())
         .init();
     Ok(())
 }
@@ -129,6 +135,22 @@ fn init_tracing_for_test() {
             .with(tracing_opentelemetry::layer().with_tracer(tracer))
             .init();
     });
+}
+
+fn init_sentry() -> Option<ClientInitGuard> {
+    if let Ok(dsn) = env::var("SENTRY_DSN") {
+        let guard = sentry::init((
+            dsn,
+            sentry::ClientOptions {
+                release: sentry::release_name!(),
+                traces_sample_rate: 0.1,
+                ..Default::default()
+            },
+        ));
+        Some(guard)
+    } else {
+        None
+    }
 }
 
 fn tracing_resources(
