@@ -47,6 +47,7 @@ pub trait PgPoolExt {
     /// * `DATABASE_URL=postgres://root@localhost:5432/defaultdb` Sets the
     ///   database URL.
     #[cfg(feature = "test")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
     fn for_test() -> Result<Self>
     where
         Self: Sized;
@@ -97,6 +98,7 @@ impl PgPoolExt for PgPool {
     }
 
     #[cfg(feature = "test")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
     fn for_test() -> Result<Self> {
         use diesel::Connection as _;
 
