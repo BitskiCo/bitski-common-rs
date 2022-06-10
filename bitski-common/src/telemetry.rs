@@ -26,7 +26,8 @@ pub struct InstrumentGuard {
 
 impl Drop for InstrumentGuard {
     fn drop(&mut self) {
-        shutdown_instruments();
+        tracing::debug!("Shutting down instruments");
+        opentelemetry::global::shutdown_tracer_provider();
     }
 }
 
@@ -162,9 +163,4 @@ fn tracing_resources(
     ];
 
     Ok(resources)
-}
-
-/// Shuts down OpenTelemetry trace providers.
-fn shutdown_instruments() {
-    opentelemetry::global::shutdown_tracer_provider();
 }
