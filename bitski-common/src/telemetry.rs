@@ -1,7 +1,7 @@
 //! # Utilities for telemetry.
 
 use opentelemetry::{
-    sdk::{trace, Resource},
+    sdk::{metrics::PushController, trace, Resource},
     util::tokio_interval_stream,
     KeyValue,
 };
@@ -17,7 +17,23 @@ use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
 
+/// Guard for telemetry instrument resources.
+///
+/// If dropped, telemetry may not work properly.
+pub struct InstrumentGuard {
+    _metrics: PushController,
+}
+
+impl Drop for InstrumentGuard {
+    fn drop(&mut self) {
+        shutdown_instruments();
+    }
+}
+
 /// Initializes OpenTelemetry for tracing.
+///
+/// The returned guard object must be kept alive until instruments are no longer
+/// needed, e.g. on server shutdown.
 ///
 /// The OTLP exporter configurable with the following env variables:
 ///
@@ -87,18 +103,18 @@ macro_rules! init_instruments {
 pub fn init_instruments_with_defaults(
     default_service_name: &str,
     default_service_version: &str,
-) -> Result<()> {
+) -> Result<InstrumentGuard> {
     let resources = tracing_resources(default_service_name, default_service_version)?;
 
-    init_metrics(&resources)?;
+    let metrics = init_metrics(&resources)?;
     init_tracing(&resources)?;
 
     tracing::info!("Configured instruments with {:?}", resources);
 
-    Ok(())
+    Ok(InstrumentGuard { _metrics: metrics })
 }
 
-fn init_metrics(resources: &[KeyValue]) -> Result<()> {
+fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
     let meter = opentelemetry_otlp::new_pipeline()
         .metrics(tokio::spawn, tokio_interval_stream)
         .with_resource(resources.to_owned())
@@ -107,7 +123,7 @@ fn init_metrics(resources: &[KeyValue]) -> Result<()> {
 
     opentelemetry::global::set_meter_provider(meter.provider());
 
-    Ok(())
+    Ok(meter)
 }
 
 fn init_tracing(resources: &[KeyValue]) -> Result<()> {
@@ -149,7 +165,6 @@ fn tracing_resources(
 }
 
 /// Shuts down OpenTelemetry trace providers.
-pub fn shutdown_instruments() -> Result<()> {
+fn shutdown_instruments() {
     opentelemetry::global::shutdown_tracer_provider();
-    Ok(())
 }
