@@ -19,6 +19,17 @@ pub fn init_env() {
     }
 }
 
+/// Initializes env variables for tests using [`std::sync::Once`].
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
+pub fn init_env_for_test() {
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        init_env();
+    });
+}
+
 /// Parses the server listen from the `ADDR` env variable or a default value.
 pub fn parse_env_addr_or<T>(default: T) -> Result<SocketAddr>
 where
