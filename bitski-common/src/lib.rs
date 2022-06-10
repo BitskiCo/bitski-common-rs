@@ -20,7 +20,6 @@ pub use actix_web_opentelemetry;
 pub use opentelemetry;
 
 pub use crate::error::Error;
-pub use crate::telemetry::shutdown_instruments;
 
 /// [`Result`] with a default error type of [`Error`].
 pub type Result<T, E = Error> = std::result::Result<T, E>;

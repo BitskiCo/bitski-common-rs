@@ -22,7 +22,7 @@ pub use actix_web::*;
 /// #[actix_web::main]
 /// async fn main() -> Result<()> {
 ///     init_env();
-///     init_instruments!()?;
+///     let _instruments = init_instruments!()?;
 ///
 ///     // listens on `localhost:8000`
 ///     let addr = parse_env_addr_or_default()?;
@@ -32,8 +32,6 @@ pub use actix_web::*;
 ///         .bind(addr)?
 ///         .run()
 ///         .await?;
-///
-///     shutdown_instruments()?;
 ///
 ///     Ok(())
 /// }
