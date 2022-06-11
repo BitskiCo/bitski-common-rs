@@ -21,6 +21,7 @@ actix-web = ["dep:actix-web", "actix-web-opentelemetry", "http", "serde_json"]
 awc = ["dep:awc"]
 bcrypt = ["dep:bcrypt"]
 diesel = ["async-trait", "dep:diesel", "r2d2"]
+humantime = ["dep:humantime"]
 lettre = ["dep:lettre", "lettre_email"]
 oauth2 = ["dep:oauth2"]
 postgres = ["diesel", "diesel/postgres"]
@@ -46,6 +47,7 @@ bcrypt = { version = "0.13.0", default-features = false, features = [
 diesel = { version = "1.4.8", features = ["r2d2"], optional = true }
 dotenv = "0.15.0"
 http = { version = "0.2.7", optional = true }
+humantime = { version = "2.1.0", optional = true }
 hyper = "0.14.18"
 lettre = { version = "0.9.6", optional = true }
 lettre_email = { version = "0.9.4", optional = true }

@@ -4,6 +4,8 @@ use std::fmt::Debug;
 use std::io::ErrorKind;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::str::FromStr;
+#[cfg(feature = "humantime")]
+use std::time::Duration;
 use std::{env, net::ToSocketAddrs};
 
 use crate::{Error, Result};
@@ -37,12 +39,12 @@ where
             })?
             .next()
     };
-    addr.ok_or(
-        Error::invalid_argument().with_message("Error parsing env ADDR: no address specified"),
-    )
+    addr.ok_or_else(|| {
+        Error::invalid_argument().with_message("Error parsing env ADDR: no address specified")
+    })
 }
 
-/// Parses the server listen from the `ADDR` env variable or returns `127.0.0.1:8000``.
+/// Parses the server listen from the `ADDR` env variable or returns `127.0.0.1:8000`.
 pub fn parse_env_addr_or_default() -> Result<SocketAddr> {
     parse_env_or_else("ADDR", || {
         SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000)
@@ -55,8 +57,8 @@ pub fn parse_env_addr_or_default() -> Result<SocketAddr> {
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env;
-///
+/// # use bitski_common::env::parse_env;
+/// #
 /// # fn main() -> Result<()> {
 /// let cargo_pkg_name: Option<String> = parse_env("CARGO_PKG_NAME")?;
 /// assert_eq!(cargo_pkg_name, Some("bitski-common".into()));
@@ -91,8 +93,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::require_env;
-///
+/// # use bitski_common::env::require_env;
+/// #
 /// # fn main() -> Result<()> {
 /// let cargo_pkg_name: String = require_env("CARGO_PKG_NAME")?;
 /// assert_eq!(cargo_pkg_name, "bitski-common");
@@ -120,8 +122,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_or;
-///
+/// # use bitski_common::env::parse_env_or;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: String = parse_env_or("FOOBAR", "default")?;
 /// assert_eq!(foobar, "default");
@@ -161,8 +163,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_or_else;
-///
+/// # use bitski_common::env::parse_env_or_else;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: String = parse_env_or_else("FOOBAR", || "default")?;
 /// assert_eq!(foobar, "default");
@@ -203,8 +205,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_or_default;
-///
+/// # use bitski_common::env::parse_env_or_default;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: String = parse_env_or_default("FOOBAR")?;
 /// assert_eq!(foobar, "");
@@ -239,8 +241,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_list;
-///
+/// # use bitski_common::env::parse_env_list;
+/// #
 /// # fn main() -> Result<()> {
 /// std::env::set_var("FOOBAR", "foo,bar");
 /// let foobar: Option<Vec<String>> = parse_env_list("FOOBAR")?;
@@ -280,8 +282,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::require_env_list;
-///
+/// # use bitski_common::env::require_env_list;
+/// #
 /// # fn main() -> Result<()> {
 /// std::env::set_var("FOOBAR", "foo,bar");
 /// let foobar: Vec<String> = require_env_list("FOOBAR")?;
@@ -310,8 +312,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_list_or;
-///
+/// # use bitski_common::env::parse_env_list_or;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: Vec<String> = parse_env_list_or("FOOBAR", ["bar", "baz"])?;
 /// assert_eq!(foobar, ["bar".to_string(), "baz".to_string()]);
@@ -352,8 +354,8 @@ where
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_list_or_else;
-///
+/// # use bitski_common::env::parse_env_list_or_else;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: Vec<String> = parse_env_list_or_else("FOOBAR", || ["bar", "baz"])?;
 /// assert_eq!(foobar, ["bar".to_string(), "baz".to_string()]);
@@ -389,14 +391,14 @@ where
     }
 }
 
-/// Parses a value from an env variable or returns an empty list.
+/// Parses a [`Duration`] from an env variable or returns an empty list.
 ///
 /// # Examples
 ///
 /// ```rust
 /// # use anyhow::Result;
-/// use bitski_common::env::parse_env_list_or_default;
-///
+/// # use bitski_common::env::parse_env_list_or_default;
+/// #
 /// # fn main() -> Result<()> {
 /// let foobar: Vec<String> = parse_env_list_or_default("FOOBAR")?;
 /// assert!(foobar.is_empty());
@@ -416,4 +418,142 @@ where
         Ok(None) => Ok(Default::default()),
         Err(err) => Err(err),
     }
+}
+
+/// Parses a [`Duration`] from an env variable.
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// # use anyhow::Result;
+/// # use bitski_common::env::parse_env_duration;
+/// #
+/// # fn main() -> Result<()> {
+/// let duration = parse_env_duration("DURATION")?;
+/// assert_eq!(duration, None);
+///
+/// std::env::set_var("DURATION", "1s");
+/// let duration = parse_env_duration("DURATION")?;
+/// assert_eq!(duration, Some(Duration::from_secs(1)));
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub fn parse_env_duration(name: &'static str) -> Result<Option<Duration>> {
+    if let Some(s) = parse_env::<String>(name)? {
+        Ok(Some(humantime::parse_duration(&s)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Parses a required [`Duration`] from an env variable.
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// # use anyhow::Result;
+/// # use bitski_common::env::require_env_duration;
+/// #
+/// # fn main() -> Result<()> {
+/// let duration = require_env_duration("DURATION");
+/// assert!(duration.is_err());
+///
+/// std::env::set_var("DURATION", "1s");
+/// let duration = require_env_duration("DURATION")?;
+/// assert_eq!(duration, Duration::from_secs(1));
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub fn require_env_duration(name: &'static str) -> Result<Duration> {
+    let s = require_env::<String>(name)?;
+    Ok(humantime::parse_duration(&s)?)
+}
+
+/// Parses a [`Duration`] from an env variable or a default [`Duration`].
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// # use anyhow::Result;
+/// # use bitski_common::env::parse_env_duration_or;
+/// #
+/// # fn main() -> Result<()> {
+/// let duration = parse_env_duration_or("DURATION", Duration::from_secs(4))?;
+/// assert_eq!(duration, Duration::from_secs(4));
+///
+/// std::env::set_var("DURATION", "1s");
+/// let duration = parse_env_duration_or("DURATION", Duration::from_secs(4))?;
+/// assert_eq!(duration, Duration::from_secs(1));
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub fn parse_env_duration_or(name: &'static str, default: Duration) -> Result<Duration> {
+    Ok(parse_env_duration(name)?.unwrap_or(default))
+}
+
+/// Parses a [`Duration`] from an env variable or a default [`Duration`].
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// # use anyhow::Result;
+/// # use bitski_common::env::parse_env_duration_or_else;
+/// #
+/// # fn main() -> Result<()> {
+/// let duration = parse_env_duration_or_else("DURATION", || Duration::from_secs(4))?;
+/// assert_eq!(duration, Duration::from_secs(4));
+///
+/// std::env::set_var("DURATION", "1s");
+/// let duration = parse_env_duration_or_else("DURATION", || Duration::from_secs(4))?;
+/// assert_eq!(duration, Duration::from_secs(1));
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub fn parse_env_duration_or_else<F>(name: &'static str, default: F) -> Result<Duration>
+where
+    F: FnOnce() -> Duration,
+{
+    Ok(parse_env_duration(name)?.unwrap_or_else(default))
+}
+
+/// Parses a [`Duration`] from an env variable or returns `Duration::ZERO`.
+///
+/// # Examples
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// # use anyhow::Result;
+/// # use bitski_common::env::parse_env_duration_or_default;
+/// #
+/// # fn main() -> Result<()> {
+/// let duration = parse_env_duration_or_default("DURATION")?;
+/// assert_eq!(duration, Duration::ZERO);
+///
+/// std::env::set_var("DURATION", "1s");
+/// let duration = parse_env_duration_or_default("DURATION")?;
+/// assert_eq!(duration, Duration::from_secs(1));
+/// # Ok(())
+/// # }
+/// ```
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub fn parse_env_duration_or_default(name: &'static str) -> Result<Duration> {
+    Ok(parse_env_duration(name)?.unwrap_or_default())
 }
