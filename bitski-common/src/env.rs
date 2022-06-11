@@ -1,4 +1,34 @@
 //! Utilities for parsing env variables.
+//!
+//! # Eager parsing
+//!
+//! Eager parsing is useful for exiting a program early when env variables are
+//! invalid or missing. To implement eager parsing for env variables, read env
+//! variables in object constructors and eagerly create dependencies on program
+//! startup:
+//!
+//! ```rust
+//! use bitski_common::Result;
+//! use bitski_common::env::require_env;
+//!
+//! struct Candy {
+//!     name: String
+//! }
+//!
+//! impl Candy {
+//!     fn new() -> Result<Self> {
+//!         let name = require_env("CANDY_NAME")?;
+//!         Ok(Self { name })
+//!     }
+//! }
+//!
+//! fn main() {
+//!     init_env();
+//!     let _candy = Candy::new().unwrap(); // Crash OK
+//!
+//!     // ...
+//! }
+//! ```
 
 use std::fmt::Debug;
 use std::io::ErrorKind;
