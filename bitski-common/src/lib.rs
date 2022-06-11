@@ -16,7 +16,11 @@ pub mod telemetry;
 pub mod tower;
 
 #[cfg(feature = "actix-web")]
+#[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 pub use actix_web_opentelemetry;
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+pub use humantime;
 pub use opentelemetry;
 
 pub use crate::error::Error;

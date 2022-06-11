@@ -613,7 +613,29 @@ impl From<awc::error::SendRequestError> for Error {
 #[cfg_attr(docsrs, doc(cfg(feature = "awc")))]
 impl From<awc::error::JsonPayloadError> for Error {
     fn from(err: awc::error::JsonPayloadError) -> Self {
-        Error::internal().with_message(err.to_string())
+        Error::internal()
+            .with_message(err.to_string())
+            .with_source(err)
+    }
+}
+
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+impl From<humantime::DurationError> for Error {
+    fn from(err: humantime::DurationError) -> Self {
+        Error::invalid_argument()
+            .with_message(err.to_string())
+            .with_source(err)
+    }
+}
+
+#[cfg(feature = "humantime")]
+#[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
+impl From<humantime::TimestampError> for Error {
+    fn from(err: humantime::TimestampError) -> Self {
+        Error::invalid_argument()
+            .with_message(err.to_string())
+            .with_source(err)
     }
 }
 
@@ -705,7 +727,9 @@ impl From<bcrypt::BcryptError> for Error {
 #[cfg_attr(docsrs, doc(cfg(feature = "lettre")))]
 impl From<lettre::smtp::error::Error> for Error {
     fn from(err: lettre::smtp::error::Error) -> Self {
-        Error::internal().with_message(format!("Error sending email: {}", err))
+        Error::internal()
+            .with_message(format!("Error sending email: {}", err))
+            .with_source(err)
     }
 }
 
@@ -713,7 +737,9 @@ impl From<lettre::smtp::error::Error> for Error {
 #[cfg_attr(docsrs, doc(cfg(feature = "lettre")))]
 impl From<lettre_email::error::Error> for Error {
     fn from(err: lettre_email::error::Error) -> Self {
-        Error::internal().with_message(format!("Error composing email: {}", err))
+        Error::internal()
+            .with_message(format!("Error composing email: {}", err))
+            .with_source(err)
     }
 }
 
