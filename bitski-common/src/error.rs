@@ -688,6 +688,14 @@ impl From<diesel::result::Error> for Error {
     fn from(err: diesel::result::Error) -> Self {
         match err {
             diesel::result::Error::NotFound => Error::not_found().with_source(err),
+            diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::UniqueViolation,
+                _,
+            ) => Error::already_exists().with_source(err),
+            diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::ForeignKeyViolation,
+                _,
+            ) => Error::invalid_argument().with_source(err),
             _ => Error::internal().with_source(err),
         }
     }
