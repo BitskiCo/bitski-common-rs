@@ -214,6 +214,14 @@ impl Error {
         Self::Cancelled(Info::default())
     }
 
+    /// Returns true if this is an `Error::Cancelled` error.
+    pub fn is_cancelled(&self) -> bool {
+        match self {
+            Self::Cancelled(_) => true,
+            _ => false,
+        }
+    }
+
     /// Unknown error.  For example, this error may be returned when
     /// a `Status` value received from another address space belongs to
     /// an error space that is not known in this address space.  Also
@@ -223,6 +231,14 @@ impl Error {
     /// HTTP Mapping: 500 Internal Server Error
     pub fn unknown() -> Self {
         Self::Unknown(Info::default())
+    }
+
+    /// Returns true if this is an `Error::Unknown` error.
+    pub fn is_unknown(&self) -> bool {
+        match self {
+            Self::Unknown(_) => true,
+            _ => false,
+        }
     }
 
     /// The client specified an invalid argument.  Note that this differs
@@ -235,6 +251,14 @@ impl Error {
         Self::InvalidArgument(Info::default())
     }
 
+    /// Returns true if this is an `Error::InvalidArgument` error.
+    pub fn is_invalid_argument(&self) -> bool {
+        match self {
+            Self::InvalidArgument(_) => true,
+            _ => false,
+        }
+    }
+
     /// The deadline expired before the operation could complete. For operations
     /// that change the state of the system, this error may be returned
     /// even if the operation has completed successfully.  For example, a
@@ -244,6 +268,14 @@ impl Error {
     /// HTTP Mapping: 504 Gateway Timeout
     pub fn deadline_exceeded() -> Self {
         Self::DeadlineExceeded(Info::default())
+    }
+
+    /// Returns true if this is an `Error::DeadlineExceeded` error.
+    pub fn is_deadline_exceeded(&self) -> bool {
+        match self {
+            Self::DeadlineExceeded(_) => true,
+            _ => false,
+        }
     }
 
     /// Some requested entity (e.g., file or directory) was not found.
@@ -259,12 +291,28 @@ impl Error {
         Self::NotFound(Info::default())
     }
 
+    /// Returns true if this is an `Error::NotFound` error.
+    pub fn is_not_found(&self) -> bool {
+        match self {
+            Self::NotFound(_) => true,
+            _ => false,
+        }
+    }
+
     /// The entity that a client attempted to create (e.g., file or directory)
     /// already exists.
     ///
     /// HTTP Mapping: 409 Conflict
     pub fn already_exists() -> Self {
         Self::AlreadyExists(Info::default())
+    }
+
+    /// Returns true if this is an `Error::AlreadyExists` error.
+    pub fn is_already_exists(&self) -> bool {
+        match self {
+            Self::AlreadyExists(_) => true,
+            _ => false,
+        }
     }
 
     /// The caller does not have permission to execute the specified
@@ -281,12 +329,28 @@ impl Error {
         Self::PermissionDenied(Info::default())
     }
 
+    /// Returns true if this is an `Error::PermissionDenied` error.
+    pub fn is_permission_denied(&self) -> bool {
+        match self {
+            Self::PermissionDenied(_) => true,
+            _ => false,
+        }
+    }
+
     /// Some resource has been exhausted, perhaps a per-user quota, or
     /// perhaps the entire file system is out of space.
     ///
     /// HTTP Mapping: 429 Too Many Requests
     pub fn resource_exhausted() -> Self {
         Self::ResourceExhausted(Info::default())
+    }
+
+    /// Returns true if this is an `Error::ResourceExhausted` error.
+    pub fn is_resource_exhausted(&self) -> bool {
+        match self {
+            Self::ResourceExhausted(_) => true,
+            _ => false,
+        }
     }
 
     /// The operation was rejected because the system is not in a state
@@ -311,6 +375,14 @@ impl Error {
         Self::FailedPrecondition(Info::default())
     }
 
+    /// Returns true if this is an `Error::FailedPrecondition` error.
+    pub fn is_failed_precondition(&self) -> bool {
+        match self {
+            Self::FailedPrecondition(_) => true,
+            _ => false,
+        }
+    }
+
     /// The operation was aborted, typically due to a concurrency issue such as
     /// a sequencer check failure or transaction abort.
     ///
@@ -320,6 +392,14 @@ impl Error {
     /// HTTP Mapping: 409 Conflict
     pub fn aborted() -> Self {
         Self::Aborted(Info::default())
+    }
+
+    /// Returns true if this is an `Error::Aborted` error.
+    pub fn is_aborted(&self) -> bool {
+        match self {
+            Self::Aborted(_) => true,
+            _ => false,
+        }
     }
 
     /// The operation was attempted past the valid range.  E.g., seeking or
@@ -343,12 +423,28 @@ impl Error {
         Self::OutOfRange(Info::default())
     }
 
+    /// Returns true if this is an `Error::OutOfRange` error.
+    pub fn is_out_of_range(&self) -> bool {
+        match self {
+            Self::OutOfRange(_) => true,
+            _ => false,
+        }
+    }
+
     /// The operation is not implemented or is not supported/enabled in this
     /// service.
     ///
     /// HTTP Mapping: 501 Not Implemented
     pub fn unimplemented() -> Self {
         Self::Unimplemented(Info::default())
+    }
+
+    /// Returns true if this is an `Error::Unimplemented` error.
+    pub fn is_unimplemented(&self) -> bool {
+        match self {
+            Self::Unimplemented(_) => true,
+            _ => false,
+        }
     }
 
     /// Internal errors.  This means that some invariants expected by the
@@ -358,6 +454,14 @@ impl Error {
     /// HTTP Mapping: 500 Internal Server Error
     pub fn internal() -> Self {
         Self::Internal(Info::default())
+    }
+
+    /// Returns true if this is an `Error::Internal` error.
+    pub fn is_internal(&self) -> bool {
+        match self {
+            Self::Internal(_) => true,
+            _ => false,
+        }
     }
 
     /// The service is currently unavailable.  This is most likely a
@@ -373,11 +477,27 @@ impl Error {
         Self::Unavailable(Info::default())
     }
 
+    /// Returns true if this is an `Error::Unavailable` error.
+    pub fn is_unavailable(&self) -> bool {
+        match self {
+            Self::Unavailable(_) => true,
+            _ => false,
+        }
+    }
+
     /// Unrecoverable data loss or corruption.
     ///
     /// HTTP Mapping: 500 Internal Server Error
     pub fn data_loss() -> Self {
         Self::DataLoss(Info::default())
+    }
+
+    /// Returns true if this is an `Error::DataLoss` error.
+    pub fn is_data_loss(&self) -> bool {
+        match self {
+            Self::DataLoss(_) => true,
+            _ => false,
+        }
     }
 
     /// The request does not have valid authentication credentials for the
@@ -386,6 +506,14 @@ impl Error {
     /// HTTP Mapping: 401 Unauthorized
     pub fn unauthenticated() -> Self {
         Self::Unauthenticated(Info::default())
+    }
+
+    /// Returns true if this is an `Error::Unauthenticated` error.
+    pub fn is_unauthenticated(&self) -> bool {
+        match self {
+            Self::Unauthenticated(_) => true,
+            _ => false,
+        }
     }
 }
 
@@ -867,5 +995,30 @@ mod test_actix_web {
     #[test]
     fn test_http_status_code_cancelled() {
         assert_eq!(Error::cancelled().status_code(), 499);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn is() {
+        assert!(Error::cancelled().is_cancelled());
+        assert!(Error::unknown().is_unknown());
+        assert!(Error::invalid_argument().is_invalid_argument());
+        assert!(Error::deadline_exceeded().is_deadline_exceeded());
+        assert!(Error::not_found().is_not_found());
+        assert!(Error::already_exists().is_already_exists());
+        assert!(Error::permission_denied().is_permission_denied());
+        assert!(Error::resource_exhausted().is_resource_exhausted());
+        assert!(Error::failed_precondition().is_failed_precondition());
+        assert!(Error::aborted().is_aborted());
+        assert!(Error::out_of_range().is_out_of_range());
+        assert!(Error::unimplemented().is_unimplemented());
+        assert!(Error::internal().is_internal());
+        assert!(Error::unavailable().is_unavailable());
+        assert!(Error::data_loss().is_data_loss());
+        assert!(Error::unauthenticated().is_unauthenticated());
     }
 }
