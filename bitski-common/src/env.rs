@@ -7,9 +7,9 @@
 //! variables in object constructors and eagerly create dependencies on program
 //! startup:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use bitski_common::Result;
-//! use bitski_common::env::require_env;
+//! use bitski_common::env::{init_env, require_env};
 //!
 //! struct Candy {
 //!     name: String
@@ -29,6 +29,7 @@
 //!     // ...
 //! }
 //! ```
+#![allow(clippy::needless_doctest_main)]
 
 use std::fmt::Debug;
 use std::io::ErrorKind;

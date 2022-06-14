@@ -17,14 +17,12 @@ use uuid::Uuid;
 /// Example:
 ///
 /// ```rust,no_run
+/// # use bitski_common_macros::with_instruments;
+/// #
 /// #[with_instruments]
 /// #[tokio::main]
-/// async fn main() -> Result<()> {
-///     init_env();
-///
+/// async fn main() {
 ///     // ...
-///
-///     Ok(())
 /// }
 /// ```
 ///
@@ -82,7 +80,6 @@ use uuid::Uuid;
 ///             fieldRef:
 ///               fieldPath: metadata.labels.version
 /// ```
-#[allow(clippy::needless_doctest_main)]
 #[proc_macro_attribute]
 pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
     // If any of the steps for this macro fail, we still want to expand to an item that is as close

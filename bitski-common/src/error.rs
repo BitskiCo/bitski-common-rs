@@ -216,10 +216,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Cancelled` error.
     pub fn is_cancelled(&self) -> bool {
-        match self {
-            Self::Cancelled(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Cancelled(_))
     }
 
     /// Unknown error.  For example, this error may be returned when
@@ -235,10 +232,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Unknown` error.
     pub fn is_unknown(&self) -> bool {
-        match self {
-            Self::Unknown(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Unknown(_))
     }
 
     /// The client specified an invalid argument.  Note that this differs
@@ -253,10 +247,7 @@ impl Error {
 
     /// Returns true if this is an `Error::InvalidArgument` error.
     pub fn is_invalid_argument(&self) -> bool {
-        match self {
-            Self::InvalidArgument(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::InvalidArgument(_))
     }
 
     /// The deadline expired before the operation could complete. For operations
@@ -272,10 +263,7 @@ impl Error {
 
     /// Returns true if this is an `Error::DeadlineExceeded` error.
     pub fn is_deadline_exceeded(&self) -> bool {
-        match self {
-            Self::DeadlineExceeded(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::DeadlineExceeded(_))
     }
 
     /// Some requested entity (e.g., file or directory) was not found.
@@ -293,10 +281,7 @@ impl Error {
 
     /// Returns true if this is an `Error::NotFound` error.
     pub fn is_not_found(&self) -> bool {
-        match self {
-            Self::NotFound(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::NotFound(_))
     }
 
     /// The entity that a client attempted to create (e.g., file or directory)
@@ -309,10 +294,7 @@ impl Error {
 
     /// Returns true if this is an `Error::AlreadyExists` error.
     pub fn is_already_exists(&self) -> bool {
-        match self {
-            Self::AlreadyExists(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::AlreadyExists(_))
     }
 
     /// The caller does not have permission to execute the specified
@@ -331,10 +313,7 @@ impl Error {
 
     /// Returns true if this is an `Error::PermissionDenied` error.
     pub fn is_permission_denied(&self) -> bool {
-        match self {
-            Self::PermissionDenied(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::PermissionDenied(_))
     }
 
     /// Some resource has been exhausted, perhaps a per-user quota, or
@@ -347,10 +326,7 @@ impl Error {
 
     /// Returns true if this is an `Error::ResourceExhausted` error.
     pub fn is_resource_exhausted(&self) -> bool {
-        match self {
-            Self::ResourceExhausted(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::ResourceExhausted(_))
     }
 
     /// The operation was rejected because the system is not in a state
@@ -377,10 +353,7 @@ impl Error {
 
     /// Returns true if this is an `Error::FailedPrecondition` error.
     pub fn is_failed_precondition(&self) -> bool {
-        match self {
-            Self::FailedPrecondition(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::FailedPrecondition(_))
     }
 
     /// The operation was aborted, typically due to a concurrency issue such as
@@ -396,10 +369,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Aborted` error.
     pub fn is_aborted(&self) -> bool {
-        match self {
-            Self::Aborted(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Aborted(_))
     }
 
     /// The operation was attempted past the valid range.  E.g., seeking or
@@ -425,10 +395,7 @@ impl Error {
 
     /// Returns true if this is an `Error::OutOfRange` error.
     pub fn is_out_of_range(&self) -> bool {
-        match self {
-            Self::OutOfRange(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::OutOfRange(_))
     }
 
     /// The operation is not implemented or is not supported/enabled in this
@@ -441,10 +408,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Unimplemented` error.
     pub fn is_unimplemented(&self) -> bool {
-        match self {
-            Self::Unimplemented(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Unimplemented(_))
     }
 
     /// Internal errors.  This means that some invariants expected by the
@@ -458,10 +422,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Internal` error.
     pub fn is_internal(&self) -> bool {
-        match self {
-            Self::Internal(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Internal(_))
     }
 
     /// The service is currently unavailable.  This is most likely a
@@ -479,10 +440,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Unavailable` error.
     pub fn is_unavailable(&self) -> bool {
-        match self {
-            Self::Unavailable(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Unavailable(_))
     }
 
     /// Unrecoverable data loss or corruption.
@@ -494,10 +452,7 @@ impl Error {
 
     /// Returns true if this is an `Error::DataLoss` error.
     pub fn is_data_loss(&self) -> bool {
-        match self {
-            Self::DataLoss(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::DataLoss(_))
     }
 
     /// The request does not have valid authentication credentials for the
@@ -510,10 +465,7 @@ impl Error {
 
     /// Returns true if this is an `Error::Unauthenticated` error.
     pub fn is_unauthenticated(&self) -> bool {
-        match self {
-            Self::Unauthenticated(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Unauthenticated(_))
     }
 }
 
