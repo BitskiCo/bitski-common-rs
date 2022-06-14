@@ -82,7 +82,6 @@ use uuid::Uuid;
 ///             fieldRef:
 ///               fieldPath: metadata.labels.version
 /// ```
-#[allow(clippy::needless_doctest_main)]
 #[proc_macro_attribute]
 pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
     // If any of the steps for this macro fail, we still want to expand to an item that is as close
