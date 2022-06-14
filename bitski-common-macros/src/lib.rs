@@ -17,14 +17,12 @@ use uuid::Uuid;
 /// Example:
 ///
 /// ```rust,no_run
+/// # use bitski_common_macros::with_instruments;
+/// #
 /// #[with_instruments]
 /// #[tokio::main]
-/// async fn main() -> Result<()> {
-///     init_env();
-///
+/// async fn main() {
 ///     // ...
-///
-///     Ok(())
 /// }
 /// ```
 ///
