@@ -1,4 +1,6 @@
 //! # Utilities for telemetry.
+//!
+//! See [`with_instruments`][`bitski_common_macros::with_instruments`].
 
 use opentelemetry::{
     sdk::{metrics::PushController, trace, Resource},
@@ -17,79 +19,7 @@ use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
 
-/// Guard for telemetry instrument resources.
-///
-/// If dropped, telemetry may not work properly.
-pub struct InstrumentGuard {
-    _metrics: PushController,
-}
-
-impl Drop for InstrumentGuard {
-    fn drop(&mut self) {
-        tracing::debug!("Shutting down instruments");
-        opentelemetry::global::shutdown_tracer_provider();
-    }
-}
-
-/// Initializes OpenTelemetry for tracing.
-///
-/// The returned guard object must be kept alive until instruments are no longer
-/// needed, e.g. on server shutdown.
-///
-/// The OTLP exporter configurable with the following env variables:
-///
-/// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` Sets the target to
-///   which the exporter is going to send spans or metrics.
-///
-/// * `OTEL_EXPORTER_OTLP_TIMEOUT=10` Sets the max waiting time for the backend
-///   to process each spans or metrics batch in seconds.
-///
-/// * `RUST_LOG=error` Sets the logging level for logs and spans. See
-///   [`tracing_subscriber::EnvFilter`].
-///
-/// * `SERVICE_NAMESPACE=?` Sets the Otel `service.namespace` resource value.
-///
-/// * `SERVICE_NAME=${CARGO_BIN_NAME:-$CARGO_PKG_NAME}` Sets the Otel
-///   `service.name` resource value. Defaults to the value of `CARGO_BIN_NAME`
-///   or `CARGO_PKG_NAME` at build time.
-///
-/// * `SERVICE_INSTANCE_ID=$(uuidgen)` Sets the Otel `service.instance.id`
-///   resource value. Defaults to a random [Uuid].
-///
-/// * `SERVICE_VERSION=${CARGO_PKG_VERSION}` Sets the Otel `service.version`
-///   resource value. Defaults to the value of `CARGO_PKG_VERSION` at build
-///   time.
-///
-/// To override the configuration in Kubernetes:
-///
-/// ```yaml
-/// apiVersion: v1
-/// kind: Pod
-/// metadata:
-///   name: test-pod
-/// spec:
-///   containers:
-///     - name: test-container
-///       image: busybox
-///       command: ["/bin/sh", "-c", "env"]
-///       env:
-///         - name: SERVICE_NAMESPACE
-///           valueFrom:
-///             fieldRef:
-///               fieldPath: metadata.namespace
-///         - name: SERVICE_NAME
-///           valueFrom:
-///             fieldRef:
-///               fieldPath: metadata.labels.app
-///         - name: SERVICE_INSTANCE_ID
-///           valueFrom:
-///             fieldRef:
-///               fieldPath: metadata.name
-///         - name: SERVICE_VERSION
-///           valueFrom:
-///             fieldRef:
-///               fieldPath: metadata.labels.version
-/// ```
+#[doc(hidden)]
 #[macro_export]
 macro_rules! init_instruments {
     () => {
@@ -104,7 +34,8 @@ macro_rules! init_instruments {
 pub fn init_instruments_with_defaults(
     default_service_name: &str,
     default_service_version: &str,
-) -> Result<InstrumentGuard> {
+) -> Result<PushController> {
+    tracing::debug!("Initializing instruments");
     let resources = tracing_resources(default_service_name, default_service_version)?;
 
     let metrics = init_metrics(&resources)?;
@@ -112,7 +43,15 @@ pub fn init_instruments_with_defaults(
 
     tracing::info!("Configured instruments with {:?}", resources);
 
-    Ok(InstrumentGuard { _metrics: metrics })
+    Ok(metrics)
+}
+
+/// Shuts down OpenTelemetry providers.
+#[doc(hidden)]
+pub fn shutdown_instruments(metrics: PushController) {
+    tracing::debug!("Shutting down instruments");
+    opentelemetry::global::shutdown_tracer_provider();
+    drop(metrics);
 }
 
 fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {

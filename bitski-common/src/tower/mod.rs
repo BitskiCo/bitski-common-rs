@@ -31,17 +31,16 @@ const DEFAULT_SERVER_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// use anyhow::Result;
 /// use bitski_common::{
 ///     env::{init_env, parse_env_addr_or_default},
-///     init_instruments,
 ///     tower::{BitskiLayer, BitskiLayerExt as _},
+///     with_instruments,
 /// };
 /// use hyper::header;
 /// use tonic::transport::Server;
 ///
 /// #[tokio::main]
+/// #[with_instruments]
 /// async fn main() -> Result<()> {
 ///     init_env();
-///     let _instruments = init_instruments!()?;
-///
 ///     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
 ///
 ///     // Empty string is convention for server health

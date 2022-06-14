@@ -18,6 +18,7 @@ pub mod tower;
 #[cfg(feature = "actix-web")]
 #[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 pub use actix_web_opentelemetry;
+pub use bitski_common_macros::with_instruments;
 #[cfg(feature = "humantime")]
 #[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
 pub use humantime;
