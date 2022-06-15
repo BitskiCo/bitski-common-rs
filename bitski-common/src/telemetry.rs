@@ -31,6 +31,17 @@ macro_rules! init_instruments {
 }
 
 #[doc(hidden)]
+#[macro_export]
+macro_rules! init_instruments_for_test {
+    () => {
+        $crate::telemetry::init_instruments_with_defaults_for_test(
+            option_env!("CARGO_BIN_NAME").unwrap_or(env!("CARGO_PKG_NAME")),
+            env!("CARGO_PKG_VERSION"),
+        )
+    };
+}
+
+#[doc(hidden)]
 pub fn init_instruments_with_defaults(
     default_service_name: &str,
     default_service_version: &str,
@@ -40,6 +51,22 @@ pub fn init_instruments_with_defaults(
 
     let metrics = init_metrics(&resources)?;
     init_tracing(&resources)?;
+
+    tracing::info!("Configured instruments with {:?}", resources);
+
+    Ok(metrics)
+}
+
+#[doc(hidden)]
+pub fn init_instruments_with_defaults_for_test(
+    default_service_name: &str,
+    default_service_version: &str,
+) -> Result<PushController> {
+    tracing::debug!("Initializing instruments");
+    let resources = tracing_resources(default_service_name, default_service_version)?;
+
+    let metrics = init_metrics(&resources)?;
+    init_tracing_for_test()?;
 
     tracing::info!("Configured instruments with {:?}", resources);
 
@@ -69,31 +96,34 @@ fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
 fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
 
-    #[cfg(not(any(test, feature = "test")))]
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_trace_config(trace::config().with_resource(Resource::new(resources.to_owned())))
         .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
         .install_batch(opentelemetry::runtime::TokioCurrentThread)?;
 
-    #[cfg(any(test, feature = "test"))]
+    tracing_subscriber::Registry::default()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer().with_ansi(false))
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .init();
+    Ok(())
+}
+
+fn init_tracing_for_test() -> Result<()> {
+    opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
+
     let tracer = {
-        let _ignored = resources;
         use opentelemetry::trace::TracerProvider;
         opentelemetry::sdk::trace::TracerProvider::default().tracer("test")
     };
-
-    #[cfg(any(test, feature = "test"))]
-    let ansi = true;
-    #[cfg(not(any(test, feature = "test")))]
-    let ansi = false;
 
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
         tracing_subscriber::Registry::default()
             .with(tracing_subscriber::EnvFilter::from_default_env())
-            .with(tracing_subscriber::fmt::layer().with_ansi(ansi))
+            .with(tracing_subscriber::fmt::layer().with_ansi(true))
             .with(tracing_opentelemetry::layer().with_tracer(tracer))
             .init();
     });
