@@ -88,12 +88,15 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     #[cfg(not(any(test, feature = "test")))]
     let ansi = false;
 
-    tracing_subscriber::Registry::default()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer().with_ansi(ansi))
-        .with(tracing_opentelemetry::layer().with_tracer(tracer))
-        .init();
-
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        tracing_subscriber::Registry::default()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer().with_ansi(ansi))
+            .with(tracing_opentelemetry::layer().with_tracer(tracer))
+            .init();
+    });
     Ok(())
 }
 
