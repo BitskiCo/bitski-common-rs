@@ -119,7 +119,7 @@ pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
                 let metrics = bitski_common::init_instruments!().expect("Instruments");
                 let result = body.await;
                 bitski_common::telemetry::shutdown_instruments(metrics);
-                return result;
+                result
             }
         })
         .expect("Parsing failure");
@@ -130,7 +130,7 @@ pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
                 let metrics = bitski_common::init_instruments!().expect("Instruments");
                 let result = body();
                 bitski_common::telemetry::shutdown_instruments(metrics);
-                return result;
+                result
             }
         })
         .expect("Parsing failure");
