@@ -30,7 +30,8 @@ macro_rules! init_instruments {
     };
 }
 
-#[doc(hidden)]
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 #[macro_export]
 macro_rules! init_instruments_for_test {
     () => {
@@ -57,7 +58,8 @@ pub fn init_instruments_with_defaults(
     Ok(metrics)
 }
 
-#[doc(hidden)]
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 pub fn init_instruments_with_defaults_for_test(
     default_service_name: &str,
     default_service_version: &str,
@@ -108,6 +110,8 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 fn init_tracing_for_test() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
