@@ -61,16 +61,14 @@ pub fn init_instruments_with_defaults(
 pub fn init_instruments_with_defaults_for_test(
     default_service_name: &str,
     default_service_version: &str,
-) -> Result<PushController> {
+) {
     tracing::debug!("Initializing instruments");
-    let resources = tracing_resources(default_service_name, default_service_version)?;
+    let resources = tracing_resources(default_service_name, default_service_version).unwrap();
 
-    let metrics = init_metrics(&resources)?;
-    init_tracing_for_test()?;
+    init_metrics(&resources).unwrap();
+    init_tracing_for_test();
 
     tracing::info!("Configured instruments with {:?}", resources);
-
-    Ok(metrics)
 }
 
 /// Shuts down OpenTelemetry providers.
@@ -110,24 +108,23 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     Ok(())
 }
 
-fn init_tracing_for_test() -> Result<()> {
-    opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
-
-    let tracer = {
-        use opentelemetry::trace::TracerProvider;
-        opentelemetry::sdk::trace::TracerProvider::default().tracer("test")
-    };
-
+fn init_tracing_for_test() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
+        opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
+
+        let tracer = {
+            use opentelemetry::trace::TracerProvider;
+            opentelemetry::sdk::trace::TracerProvider::default().tracer("test")
+        };
+
         tracing_subscriber::Registry::default()
             .with(tracing_subscriber::EnvFilter::from_default_env())
             .with(tracing_subscriber::fmt::layer().with_ansi(true))
             .with(tracing_opentelemetry::layer().with_tracer(tracer))
             .init();
     });
-    Ok(())
 }
 
 fn tracing_resources(
