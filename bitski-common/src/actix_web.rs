@@ -19,8 +19,8 @@ pub use actix_web::*;
 ///     "Hello World!"
 /// }
 ///
-/// #[actix_web::main]
 /// #[with_instruments]
+/// #[actix_web::main]
 /// async fn main() -> Result<()> {
 ///     init_env();
 ///
@@ -39,7 +39,7 @@ pub use actix_web::*;
 #[macro_export]
 macro_rules! actix_web_app {
     () => {
-        actix_web_app!(App::new())
+        actix_web_app!($crate::actix_web::App::new())
     };
     ($app:expr) => {
         $app.wrap($crate::actix_web::middleware::Compress::default())

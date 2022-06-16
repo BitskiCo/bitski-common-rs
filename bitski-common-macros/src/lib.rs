@@ -14,7 +14,9 @@ use uuid::Uuid;
 
 /// Runs an async block with OpenTelemetry for tracing.
 ///
-/// Example:
+/// Examples:
+///
+/// `#[tokio::main]` must go last!
 ///
 /// ```rust,no_run
 /// # use bitski_common_macros::with_instruments;
@@ -22,6 +24,22 @@ use uuid::Uuid;
 /// #[with_instruments]
 /// #[tokio::main]
 /// async fn main() {
+///     // ...
+/// }
+/// ```
+///
+/// Or wrap a separate `run()` function:
+///
+/// ```rust,no_run
+/// # use bitski_common_macros::with_instruments;
+/// #
+/// #[tokio::main]
+/// async fn main() {
+///     run().await
+/// }
+///
+/// #[with_instruments]
+/// async fn run() {
 ///     // ...
 /// }
 /// ```
@@ -90,6 +108,12 @@ pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return token_stream_with_error(item, e),
     };
 
+    if input.sig.asyncness.is_none() {
+        let msg = "the `async` keyword is missing from the function declaration or `#[tokio::main]` was not declared last";
+        let err = syn::Error::new_spanned(input.sig.fn_token, msg);
+        return token_stream_with_error(item, err);
+    }
+
     // If type mismatch occurs, the current rustc points to the last statement.
     let (_last_stmt_start_span, last_stmt_end_span) = {
         let mut last_stmt = input
@@ -109,32 +133,17 @@ pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let body = &input.block;
-    let output = &input.sig.output;
     let brace_token = input.block.brace_token;
-
-    if input.sig.asyncness.is_some() {
-        input.block = syn::parse2(quote_spanned! {last_stmt_end_span=>
-            {
-                let body = async move #output { #body };
-                let metrics = bitski_common::init_instruments!().expect("Instruments");
-                let result = body.await;
-                bitski_common::telemetry::shutdown_instruments(metrics);
-                result
-            }
-        })
-        .expect("Parsing failure");
-    } else {
-        input.block = syn::parse2(quote_spanned! {last_stmt_end_span=>
-            {
-                let body = move || #output { #body };
-                let metrics = bitski_common::init_instruments!().expect("Instruments");
-                let result = body();
-                bitski_common::telemetry::shutdown_instruments(metrics);
-                result
-            }
-        })
-        .expect("Parsing failure");
-    }
+    input.block = syn::parse2(quote_spanned! {last_stmt_end_span=>
+        {
+            let body = async move { #body };
+            let metrics = bitski_common::init_instruments!().expect("Instruments");
+            let result = body.await;
+            bitski_common::telemetry::shutdown_instruments(metrics);
+            result
+        }
+    })
+    .expect("Parsing failure");
     input.block.brace_token = brace_token;
 
     let result = quote! {

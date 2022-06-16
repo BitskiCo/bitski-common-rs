@@ -37,8 +37,8 @@ const DEFAULT_SERVER_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// use hyper::header;
 /// use tonic::transport::Server;
 ///
-/// #[tokio::main]
 /// #[with_instruments]
+/// #[tokio::main]
 /// async fn main() -> Result<()> {
 ///     init_env();
 ///     let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
