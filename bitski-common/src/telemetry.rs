@@ -19,7 +19,7 @@ use crate::env::{parse_env, parse_env_or, parse_env_or_else};
 use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
-const DEFAULT_SENTRY_SAMPLE_RATE: f32 = 0.01;
+const DEFAULT_SENTRY_TRACES_SAMPLE_RATE: f32 = 0.01;
 
 #[doc(hidden)]
 #[macro_export]
@@ -32,6 +32,19 @@ macro_rules! init_instruments {
     };
 }
 
+/// Initializes instruments for tests.
+///
+/// Example:
+///
+/// ```rust
+/// # use bitski_common::init_instruments_for_test;
+/// #
+/// #[test]
+/// fn test() {
+///     let _guard = init_instruments_for_test!();
+///     // ...
+/// }
+/// ```
 #[cfg(feature = "test")]
 #[cfg_attr(docsrs, doc(cfg(feature = "test")))]
 #[macro_export]
@@ -148,8 +161,10 @@ fn init_tracing_for_test() {
 fn init_sentry() -> Result<Option<ClientInitGuard>> {
     let dsn: Option<sentry::types::Dsn> = parse_env("SENTRY_DSN")?;
     if let Some(dsn) = dsn {
-        let traces_sample_rate: f32 =
-            parse_env_or("SENTRY_SAMPLE_RATE", DEFAULT_SENTRY_SAMPLE_RATE)?;
+        let traces_sample_rate: f32 = parse_env_or(
+            "SENTRY_TRACES_SAMPLE_RATE",
+            DEFAULT_SENTRY_TRACES_SAMPLE_RATE,
+        )?;
 
         tracing::info!(
             "Configured Sentry with DSN {} and sample rate {traces_sample_rate}",

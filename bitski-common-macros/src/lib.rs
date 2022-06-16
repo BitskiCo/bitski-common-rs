@@ -46,25 +46,30 @@ use uuid::Uuid;
 ///
 /// The OTLP exporter configurable with the following env variables:
 ///
-/// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` Sets the target to
+/// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` sets the target to
 ///   which the exporter is going to send spans or metrics.
 ///
-/// * `OTEL_EXPORTER_OTLP_TIMEOUT=10` Sets the max waiting time for the backend
+/// * `OTEL_EXPORTER_OTLP_TIMEOUT=10` sets the max waiting time for the backend
 ///   to process each spans or metrics batch in seconds.
 ///
-/// * `RUST_LOG=error` Sets the logging level for logs and spans. See
+/// * `RUST_LOG=error` sets the logging level for logs and spans. See
 ///   [`tracing_subscriber::EnvFilter`].
 ///
-/// * `SERVICE_NAMESPACE=?` Sets the Otel `service.namespace` resource value.
+/// * `SENTRY_DSN` sets the Sentry DSN to enable Sentry. Defaults to an empty
+///   string. Optional.
 ///
-/// * `SERVICE_NAME=${CARGO_BIN_NAME:-$CARGO_PKG_NAME}` Sets the Otel
+/// * `SENTRY_TRACES_SAMPLE_RATE=0.01` sets the Sentry traces sample rate.
+///
+/// * `SERVICE_NAMESPACE=?` sets the Otel `service.namespace` resource value.
+///
+/// * `SERVICE_NAME=${CARGO_BIN_NAME:-$CARGO_PKG_NAME}` sets the Otel
 ///   `service.name` resource value. Defaults to the value of `CARGO_BIN_NAME`
 ///   or `CARGO_PKG_NAME` at build time.
 ///
-/// * `SERVICE_INSTANCE_ID=$(uuidgen)` Sets the Otel `service.instance.id`
+/// * `SERVICE_INSTANCE_ID=$(uuidgen)` sets the Otel `service.instance.id`
 ///   resource value. Defaults to a random [`uuid::Uuid`].
 ///
-/// * `SERVICE_VERSION=${CARGO_PKG_VERSION}` Sets the Otel `service.version`
+/// * `SERVICE_VERSION=${CARGO_PKG_VERSION}` sets the Otel `service.version`
 ///   resource value. Defaults to the value of `CARGO_PKG_VERSION` at build
 ///   time.
 ///
