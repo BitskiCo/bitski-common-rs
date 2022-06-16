@@ -59,6 +59,8 @@ opentelemetry-semantic-conventions = "0.9.0"
 opentelemetry-zipkin = "0.15.0"
 r2d2 = { version = "0.8.9", optional = true }
 reqwest = { version = "0.11.10", optional = true, default-features = false }
+sentry = "0.26.0"
+sentry-tracing = "0.26.0"
 serde_json = { version = "1.0.81", optional = true }
 tokio = { version = "1.18.0", features = ["rt"] }
 tonic = { version = "0.7.1", optional = true }
