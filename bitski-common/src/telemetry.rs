@@ -15,7 +15,7 @@ use sentry::ClientInitGuard;
 use tracing_subscriber::prelude::*;
 use uuid::Uuid;
 
-use crate::env::{parse_env, parse_env_or, parse_env_or_else};
+use crate::env::{parse_env, parse_env_or, parse_env_or_default, parse_env_or_else};
 use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
@@ -159,34 +159,42 @@ fn init_tracing_for_test() {
 }
 
 fn init_sentry() -> Result<Option<ClientInitGuard>> {
-    let dsn: Option<sentry::types::Dsn> = parse_env("SENTRY_DSN")?;
-    if let Some(dsn) = dsn {
-        let traces_sample_rate: f32 = parse_env_or(
-            "SENTRY_TRACES_SAMPLE_RATE",
-            DEFAULT_SENTRY_TRACES_SAMPLE_RATE,
-        )?;
-
-        tracing::info!(
-            "Configured Sentry with DSN {} and sample rate {traces_sample_rate}",
-            if let Some(secret_key) = dsn.secret_key() {
-                dsn.to_string().replace(secret_key, "***")
-            } else {
-                dsn.to_string()
-            }
-        );
-
-        let guard = sentry::init((
-            dsn,
-            sentry::ClientOptions {
-                release: sentry::release_name!(),
-                traces_sample_rate,
-                ..Default::default()
-            },
-        ));
-        Ok(Some(guard))
-    } else {
-        Ok(None)
+    let enable_sentry_traces: bool = parse_env_or_default("ENABLE_SENTRY_TRACES")?;
+    if !enable_sentry_traces {
+        return Ok(None);
     }
+
+    let dsn: Option<sentry::types::Dsn> = parse_env("SENTRY_DSN")?;
+    let dsn = if let Some(dsn) = dsn {
+        dsn
+    } else {
+        return Ok(None);
+    };
+
+    let traces_sample_rate: f32 = parse_env_or(
+        "SENTRY_TRACES_SAMPLE_RATE",
+        DEFAULT_SENTRY_TRACES_SAMPLE_RATE,
+    )?;
+
+    tracing::info!(
+        "Configured Sentry with DSN {} and sample rate {traces_sample_rate}",
+        if let Some(secret_key) = dsn.secret_key() {
+            dsn.to_string().replace(secret_key, "***")
+        } else {
+            dsn.to_string()
+        }
+    );
+
+    let guard = sentry::init((
+        dsn,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            traces_sample_rate,
+            ..Default::default()
+        },
+    ));
+
+    Ok(Some(guard))
 }
 
 fn tracing_resources(

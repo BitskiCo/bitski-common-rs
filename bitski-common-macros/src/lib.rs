@@ -46,6 +46,9 @@ use uuid::Uuid;
 ///
 /// The OTLP exporter configurable with the following env variables:
 ///
+/// * `ENABLE_SENTRY_TRACES=false` if `true`, enables Sentry integration for
+///   traces.
+///
 /// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` sets the target to
 ///   which the exporter is going to send spans or metrics.
 ///
@@ -55,8 +58,8 @@ use uuid::Uuid;
 /// * `RUST_LOG=error` sets the logging level for logs and spans. See
 ///   [`tracing_subscriber::EnvFilter`].
 ///
-/// * `SENTRY_DSN` sets the Sentry DSN to enable Sentry. Defaults to an empty
-///   string. Optional.
+/// * `SENTRY_DSN` sets the Sentry DSN to enable Sentry. Required if
+///   `ENABLE_SENTRY_TRACES=true`.
 ///
 /// * `SENTRY_TRACES_SAMPLE_RATE=0.01` sets the Sentry traces sample rate.
 ///
