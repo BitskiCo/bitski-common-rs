@@ -30,6 +30,18 @@ macro_rules! init_instruments {
     };
 }
 
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
+#[macro_export]
+macro_rules! init_instruments_for_test {
+    () => {
+        $crate::telemetry::init_instruments_with_defaults_for_test(
+            option_env!("CARGO_BIN_NAME").unwrap_or(env!("CARGO_PKG_NAME")),
+            env!("CARGO_PKG_VERSION"),
+        )
+    };
+}
+
 #[doc(hidden)]
 pub fn init_instruments_with_defaults(
     default_service_name: &str,
@@ -44,6 +56,21 @@ pub fn init_instruments_with_defaults(
     tracing::info!("Configured instruments with {:?}", resources);
 
     Ok(metrics)
+}
+
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
+pub fn init_instruments_with_defaults_for_test(
+    default_service_name: &str,
+    default_service_version: &str,
+) {
+    tracing::debug!("Initializing instruments");
+    let resources = tracing_resources(default_service_name, default_service_version).unwrap();
+
+    init_metrics(&resources).unwrap();
+    init_tracing_for_test();
+
+    tracing::info!("Configured instruments with {:?}", resources);
 }
 
 /// Shuts down OpenTelemetry providers.
@@ -80,8 +107,28 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
         .with(tracing_subscriber::fmt::layer().with_ansi(false))
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
         .init();
-
     Ok(())
+}
+
+#[cfg(feature = "test")]
+#[cfg_attr(docsrs, doc(cfg(feature = "test")))]
+fn init_tracing_for_test() {
+    use std::sync::Once;
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
+
+        let tracer = {
+            use opentelemetry::trace::TracerProvider;
+            opentelemetry::sdk::trace::TracerProvider::default().tracer("test")
+        };
+
+        tracing_subscriber::Registry::default()
+            .with(tracing_subscriber::EnvFilter::from_default_env())
+            .with(tracing_subscriber::fmt::layer().with_ansi(true))
+            .with(tracing_opentelemetry::layer().with_tracer(tracer))
+            .init();
+    });
 }
 
 fn tracing_resources(
