@@ -21,6 +21,7 @@ use crate::env::{parse_env_or, parse_env_or_else};
 use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
+const DEFAULT_SENTRY_SAMPLE_RATE: f32 = 0.1;
 
 #[doc(hidden)]
 #[macro_export]
@@ -139,11 +140,12 @@ fn init_tracing_for_test() {
 
 fn init_sentry() -> Option<ClientInitGuard> {
     if let Ok(dsn) = env::var("SENTRY_DSN") {
+        let traces_sample_rate: f32 =  parse_env_or_else("SENTRY_SAMPLE_RATE", || DEFAULT_SENTRY_SAMPLE_RATE).ok()?;
         let guard = sentry::init((
             dsn,
             sentry::ClientOptions {
                 release: sentry::release_name!(),
-                traces_sample_rate: 0.1,
+                traces_sample_rate: traces_sample_rate,
                 ..Default::default()
             },
         ));
