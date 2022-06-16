@@ -137,9 +137,9 @@ pub fn with_instruments(_args: TokenStream, item: TokenStream) -> TokenStream {
     input.block = syn::parse2(quote_spanned! {last_stmt_end_span=>
         {
             let body = async move { #body };
-            let metrics = bitski_common::init_instruments!().expect("Instruments");
+            let guard = bitski_common::init_instruments!().expect("Instruments");
             let result = body.await;
-            bitski_common::telemetry::shutdown_instruments(metrics);
+            bitski_common::telemetry::shutdown_instruments(guard);
             result
         }
     })

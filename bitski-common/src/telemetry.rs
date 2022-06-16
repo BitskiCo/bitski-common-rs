@@ -15,13 +15,11 @@ use sentry::ClientInitGuard;
 use tracing_subscriber::prelude::*;
 use uuid::Uuid;
 
-use std::env;
-
-use crate::env::{parse_env_or, parse_env_or_else};
+use crate::env::{parse_env, parse_env_or, parse_env_or_else};
 use crate::Result;
 
 const DEFAULT_SERVICE_NAMESPACE: &str = "?";
-const DEFAULT_SENTRY_SAMPLE_RATE: f32 = 0.1;
+const DEFAULT_SENTRY_SAMPLE_RATE: f32 = 0.01;
 
 #[doc(hidden)]
 #[macro_export]
@@ -47,10 +45,16 @@ macro_rules! init_instruments_for_test {
 }
 
 #[doc(hidden)]
+pub struct InstrumentGuard {
+    _metrics: PushController,
+    _sentry: Option<ClientInitGuard>,
+}
+
+#[doc(hidden)]
 pub fn init_instruments_with_defaults(
     default_service_name: &str,
     default_service_version: &str,
-) -> Result<PushController> {
+) -> Result<InstrumentGuard> {
     tracing::debug!("Initializing instruments");
     let resources = tracing_resources(default_service_name, default_service_version)?;
 
@@ -59,7 +63,12 @@ pub fn init_instruments_with_defaults(
 
     tracing::info!("Configured instruments with {:?}", resources);
 
-    Ok(metrics)
+    let sentry = init_sentry()?;
+
+    Ok(InstrumentGuard {
+        _metrics: metrics,
+        _sentry: sentry,
+    })
 }
 
 #[cfg(feature = "test")]
@@ -79,10 +88,10 @@ pub fn init_instruments_with_defaults_for_test(
 
 /// Shuts down OpenTelemetry providers.
 #[doc(hidden)]
-pub fn shutdown_instruments(metrics: PushController) {
+pub fn shutdown_instruments(guard: InstrumentGuard) {
     tracing::debug!("Shutting down instruments");
     opentelemetry::global::shutdown_tracer_provider();
-    drop(metrics);
+    drop(guard);
 }
 
 fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
@@ -99,8 +108,6 @@ fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
 
 fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     opentelemetry::global::set_text_map_propagator(opentelemetry_zipkin::Propagator::new());
-
-    let _guard = init_sentry();
 
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
@@ -138,20 +145,32 @@ fn init_tracing_for_test() {
     });
 }
 
-fn init_sentry() -> Option<ClientInitGuard> {
-    if let Ok(dsn) = env::var("SENTRY_DSN") {
-        let traces_sample_rate: f32 =  parse_env_or_else("SENTRY_SAMPLE_RATE", || DEFAULT_SENTRY_SAMPLE_RATE).ok()?;
+fn init_sentry() -> Result<Option<ClientInitGuard>> {
+    let dsn: Option<sentry::types::Dsn> = parse_env("SENTRY_DSN")?;
+    if let Some(dsn) = dsn {
+        let traces_sample_rate: f32 =
+            parse_env_or("SENTRY_SAMPLE_RATE", DEFAULT_SENTRY_SAMPLE_RATE)?;
+
+        tracing::info!(
+            "Configured Sentry with DSN {} and sample rate {traces_sample_rate}",
+            if let Some(secret_key) = dsn.secret_key() {
+                dsn.to_string().replace(secret_key, "***")
+            } else {
+                dsn.to_string()
+            }
+        );
+
         let guard = sentry::init((
             dsn,
             sentry::ClientOptions {
                 release: sentry::release_name!(),
-                traces_sample_rate: traces_sample_rate,
+                traces_sample_rate,
                 ..Default::default()
             },
         ));
-        Some(guard)
+        Ok(Some(guard))
     } else {
-        None
+        Ok(None)
     }
 }
 
