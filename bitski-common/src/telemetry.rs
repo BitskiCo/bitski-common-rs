@@ -7,7 +7,7 @@ use opentelemetry::{
     util::tokio_interval_stream,
     KeyValue,
 };
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{TonicExporterBuilder, WithExportConfig};
 use opentelemetry_semantic_conventions::resource::{
     SERVICE_INSTANCE_ID, SERVICE_NAME, SERVICE_NAMESPACE, SERVICE_VERSION,
 };
@@ -18,8 +18,14 @@ use uuid::Uuid;
 use crate::env::{parse_env, parse_env_or, parse_env_or_default, parse_env_or_else};
 use crate::Result;
 
-const DEFAULT_SERVICE_NAMESPACE: &str = "?";
-const DEFAULT_SENTRY_TRACES_SAMPLE_RATE: f32 = 0.01;
+/// Default target to which the exporter is going to send spans or metrics.
+const OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT: &str = "http://127.0.0.1:4317";
+
+/// Default value for the OpenTelemetry `service.namespace` resource
+const SERVICE_NAMESPACE_DEFAULT: &str = "?";
+
+/// Default sample rate for sending traces to Sentry
+const SENTRY_TRACES_SAMPLE_RATE_DEFAULT: f32 = 0.01;
 
 #[doc(hidden)]
 #[macro_export]
@@ -111,7 +117,7 @@ fn init_metrics(resources: &[KeyValue]) -> Result<PushController> {
     let meter = opentelemetry_otlp::new_pipeline()
         .metrics(tokio::spawn, tokio_interval_stream)
         .with_resource(resources.to_owned())
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
+        .with_exporter(create_exporter()?)
         .build()?;
 
     opentelemetry::global::set_meter_provider(meter.provider());
@@ -125,7 +131,7 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_trace_config(trace::config().with_resource(Resource::new(resources.to_owned())))
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic().with_env())
+        .with_exporter(create_exporter()?)
         .install_batch(opentelemetry::runtime::TokioCurrentThread)?;
 
     tracing_subscriber::Registry::default()
@@ -135,6 +141,20 @@ fn init_tracing(resources: &[KeyValue]) -> Result<()> {
         .with(sentry_tracing::layer())
         .init();
     Ok(())
+}
+
+fn create_exporter() -> Result<TonicExporterBuilder> {
+    let endpoint: String = parse_env_or(
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT,
+    )?;
+
+    let exporter = opentelemetry_otlp::new_exporter()
+        .tonic()
+        .with_env()
+        .with_endpoint(endpoint);
+
+    Ok(exporter)
 }
 
 #[cfg(feature = "test")]
@@ -173,7 +193,7 @@ fn init_sentry() -> Result<Option<ClientInitGuard>> {
 
     let traces_sample_rate: f32 = parse_env_or(
         "SENTRY_TRACES_SAMPLE_RATE",
-        DEFAULT_SENTRY_TRACES_SAMPLE_RATE,
+        SENTRY_TRACES_SAMPLE_RATE_DEFAULT,
     )?;
 
     tracing::info!(
@@ -201,7 +221,7 @@ fn tracing_resources(
     default_service_name: &str,
     default_service_version: &str,
 ) -> Result<Vec<KeyValue>> {
-    let service_namespace: String = parse_env_or("SERVICE_NAMESPACE", DEFAULT_SERVICE_NAMESPACE)?;
+    let service_namespace: String = parse_env_or("SERVICE_NAMESPACE", SERVICE_NAMESPACE_DEFAULT)?;
     let service_name: String = parse_env_or("SERVICE_NAME", default_service_name)?;
     let service_instance_id: String =
         parse_env_or_else("SERVICE_INSTANCE_ID", || Uuid::new_v4().to_string())?;
