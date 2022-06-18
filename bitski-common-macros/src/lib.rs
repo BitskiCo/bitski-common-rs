@@ -49,7 +49,7 @@ use uuid::Uuid;
 /// * `ENABLE_SENTRY_TRACES=false` if `true`, enables Sentry integration for
 ///   traces.
 ///
-/// * `OTEL_EXPORTER_OTLP_ENDPOINT=https://localhost:4317` sets the target to
+/// * `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317` sets the target to
 ///   which the exporter is going to send spans or metrics.
 ///
 /// * `OTEL_EXPORTER_OTLP_TIMEOUT=10` sets the max waiting time for the backend
