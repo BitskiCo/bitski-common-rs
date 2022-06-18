@@ -43,6 +43,7 @@ macro_rules! actix_web_app {
     };
     ($app:expr) => {
         $app.wrap($crate::actix_web::middleware::Compress::default())
+            .wrap($crate::sentry_actix::Sentry::new())
             .wrap($crate::actix_web_opentelemetry::RequestTracing::new())
             .wrap(
                 $crate::actix_web_opentelemetry::RequestMetricsBuilder::new()

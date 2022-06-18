@@ -15,6 +15,7 @@ pub mod telemetry;
 #[cfg_attr(docsrs, doc(cfg(feature = "tower")))]
 pub mod tower;
 
+// Re-export crates for services to use
 #[cfg(feature = "actix-web")]
 #[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 pub use actix_web_opentelemetry;
@@ -23,6 +24,11 @@ pub use bitski_common_macros::with_instruments;
 #[cfg_attr(docsrs, doc(cfg(feature = "humantime")))]
 pub use humantime;
 pub use opentelemetry;
+pub use sentry;
+#[cfg(feature = "actix-web")]
+#[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
+pub use sentry_actix;
+pub use sentry_tracing;
 
 pub use crate::error::Error;
 
