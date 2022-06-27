@@ -25,8 +25,8 @@ where
 /// See [`tokio::task::spawn_local`].
 pub fn spawn_local<T>(future: T) -> tokio::task::JoinHandle<T::Output>
 where
-    T: Future + Send + 'static,
-    T::Output: Send + 'static,
+    T: Future + 'static,
+    T::Output: 'static,
 {
     tokio::task::spawn_local(future.with_current_context())
 }
