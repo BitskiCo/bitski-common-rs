@@ -107,6 +107,10 @@ pub fn parse_env_addr_or_default() -> Result<SocketAddr> {
 ///
 /// let foobar: Option<u32> = parse_env("FOOBAR")?;
 /// assert_eq!(foobar, None);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: Option<u32> = parse_env("EMPTY")?;
+/// assert_eq!(empty, None);
 /// # Ok(())
 /// # }
 /// ```
@@ -116,6 +120,7 @@ where
     <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
+        Ok(s) if s.is_empty() => Ok(None),
         Ok(s) => Ok(Some(s.parse().map_err(|err| {
             Error::invalid_argument().with_message(format!(
                 "Error parsing env {name} as {}: {err}",
@@ -143,6 +148,10 @@ where
 ///
 /// let foobar = require_env::<u32>("FOOBAR");
 /// assert!(foobar.is_err());
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = require_env::<u32>("EMPTY");
+/// assert!(empty.is_err());
 /// # Ok(())
 /// # }
 /// ```
@@ -172,6 +181,10 @@ where
 ///
 /// let val: u32 = parse_env_or("BARBAZ", 10)?;
 /// assert_eq!(val, 10);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: u32 = parse_env_or("EMPTY", 10)?;
+/// assert_eq!(empty, 10);
 /// # Ok(())
 /// # }
 /// ```
@@ -183,6 +196,10 @@ where
     <D as TryInto<T>>::Error: 'static + std::fmt::Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
+        Ok(s) if s.is_empty() => Ok(default.try_into().map_err(|err| {
+            Error::invalid_argument()
+                .with_message(format!("Error parsing default value for env {name}: {err}"))
+        })?),
         Ok(s) => s.parse().map_err(|err| {
             Error::invalid_argument().with_message(format!(
                 "Error parsing env {name} as {}: {err}",
@@ -213,6 +230,10 @@ where
 ///
 /// let val: u32 = parse_env_or_else("BARBAZ", || 10)?;
 /// assert_eq!(val, 10);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: u32 = parse_env_or_else("EMPTY", || 10)?;
+/// assert_eq!(empty, 10);
 /// # Ok(())
 /// # }
 /// ```
@@ -225,6 +246,10 @@ where
     F: FnOnce() -> D,
 {
     match env::var(name) {
+        Ok(s) if s.is_empty() => Ok(default().try_into().map_err(|err| {
+            Error::invalid_argument()
+                .with_message(format!("Error parsing default value for env {name}: {err}"))
+        })?),
         Ok(s) => s.parse().map_err(|err| {
             Error::invalid_argument().with_message(format!(
                 "Error parsing env {name} as {}: {err}",
@@ -255,6 +280,10 @@ where
 ///
 /// let val: u32 = parse_env_or_default("BARBAZ")?;
 /// assert_eq!(val, 0);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: u32 = parse_env_or_default("EMPTY")?;
+/// assert_eq!(empty, 0);
 /// # Ok(())
 /// # }
 /// ```
@@ -264,6 +293,7 @@ where
     <T as FromStr>::Err: std::fmt::Display,
 {
     match env::var(name) {
+        Ok(s) if s.is_empty() => Ok(T::default()),
         Ok(s) => s.parse().map_err(|err| {
             Error::invalid_argument().with_message(format!(
                 "Error parsing env {name} as {}: {err}",
@@ -289,6 +319,10 @@ where
 /// std::env::set_var("FOOBAR", "foo,bar");
 /// let foobar: Option<Vec<String>> = parse_env_list("FOOBAR")?;
 /// assert_eq!(foobar, Some(vec!["foo".to_string(), "bar".to_string()]));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: Option<Vec<String>> = parse_env_list("EMPTY")?;
+/// assert_eq!(empty, None);
 /// # Ok(())
 /// # }
 /// ```
@@ -298,6 +332,7 @@ where
     <T as FromStr>::Err: 'static + Debug + Send + Sync + std::error::Error,
 {
     match env::var(name) {
+        Ok(s) if s.is_empty() => Ok(None),
         Ok(s) => {
             let mut list: Vec<T> = vec![];
             for ss in s.split_terminator(',') {
@@ -333,6 +368,10 @@ where
 ///
 /// let barbaz = require_env_list::<u32>("BARBAZ");
 /// assert!(barbaz.is_err());
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = require_env_list::<u32>("EMPTY");
+/// assert!(empty.is_err());
 /// # Ok(())
 /// # }
 /// ```
@@ -362,6 +401,10 @@ where
 ///
 /// let list: Vec<u32> = parse_env_list_or("BARBAZ", [10, 17])?;
 /// assert_eq!(list, [10, 17]);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: Vec<u32> = parse_env_list_or("EMPTY", [10, 17])?;
+/// assert_eq!(empty, [10, 17]);
 /// # Ok(())
 /// # }
 /// ```
@@ -404,6 +447,10 @@ where
 ///
 /// let list: Vec<u32> = parse_env_list_or_else("BARBAZ", || [10, 17])?;
 /// assert_eq!(list, [10, 17]);
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: Vec<u32> = parse_env_list_or_else("EMPTY", || [10, 17])?;
+/// assert_eq!(empty, [10, 17]);
 /// # Ok(())
 /// # }
 /// ```
@@ -447,6 +494,10 @@ where
 ///
 /// let list: Vec<u32> = parse_env_list_or_default("BARBAZ")?;
 /// assert!(list.is_empty());
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty: Vec<u32> = parse_env_list_or_default("EMPTY")?;
+/// assert!(empty.is_empty());
 /// # Ok(())
 /// # }
 /// ```
@@ -479,6 +530,10 @@ where
 /// std::env::set_var("DURATION", "1s");
 /// let duration = parse_env_duration("DURATION")?;
 /// assert_eq!(duration, Some(Duration::from_secs(1)));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = parse_env_duration("EMPTY")?;
+/// assert_eq!(empty, None);
 /// # Ok(())
 /// # }
 /// ```
@@ -509,6 +564,10 @@ pub fn parse_env_duration(name: &'static str) -> Result<Option<Duration>> {
 /// std::env::set_var("DURATION", "1s");
 /// let duration = require_env_duration("DURATION")?;
 /// assert_eq!(duration, Duration::from_secs(1));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = require_env_duration("EMPTY");
+/// assert!(empty.is_err());
 /// # Ok(())
 /// # }
 /// ```
@@ -536,6 +595,10 @@ pub fn require_env_duration(name: &'static str) -> Result<Duration> {
 /// std::env::set_var("DURATION", "1s");
 /// let duration = parse_env_duration_or("DURATION", Duration::from_secs(4))?;
 /// assert_eq!(duration, Duration::from_secs(1));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = parse_env_duration_or("EMPTY", Duration::from_secs(4))?;
+/// assert_eq!(empty, Duration::from_secs(4));
 /// # Ok(())
 /// # }
 /// ```
@@ -562,6 +625,10 @@ pub fn parse_env_duration_or(name: &'static str, default: Duration) -> Result<Du
 /// std::env::set_var("DURATION", "1s");
 /// let duration = parse_env_duration_or_else("DURATION", || Duration::from_secs(4))?;
 /// assert_eq!(duration, Duration::from_secs(1));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = parse_env_duration_or_else("EMPTY", || Duration::from_secs(4))?;
+/// assert_eq!(empty, Duration::from_secs(4));
 /// # Ok(())
 /// # }
 /// ```
@@ -591,6 +658,10 @@ where
 /// std::env::set_var("DURATION", "1s");
 /// let duration = parse_env_duration_or_default("DURATION")?;
 /// assert_eq!(duration, Duration::from_secs(1));
+///
+/// std::env::set_var("EMPTY", "");
+/// let empty = parse_env_duration_or_default("EMPTY")?;
+/// assert_eq!(empty, Duration::ZERO);
 /// # Ok(())
 /// # }
 /// ```
