@@ -24,7 +24,7 @@ actix-web = [
   "sentry-actix",
   "serde_json",
 ]
-awc = ["dep:awc"]
+awc = ["dep:awc", "actix-web-opentelemetry/awc"]
 bcrypt = ["dep:bcrypt"]
 diesel = ["async-trait", "dep:diesel", "r2d2"]
 humantime = ["dep:humantime"]
