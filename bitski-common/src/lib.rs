@@ -29,6 +29,7 @@ pub use sentry;
 #[cfg_attr(docsrs, doc(cfg(feature = "actix-web")))]
 pub use sentry_actix;
 pub use sentry_tracing;
+pub use tracing_opentelemetry;
 
 pub use crate::error::Error;
 
