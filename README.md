@@ -38,3 +38,29 @@ each API.
 
 Run `cargo test --all-features` in the repository directory to test all the
 code. The sub-crates will be tested as part of the Cargo workspace.
+
+## Testing the collector
+
+Start the otel collector and jaeger containers.
+
+```
+docker-compose up
+```
+
+run the example actix-web integration
+
+```
+cargo run --example actix_web --features="actix-web"
+```
+
+make a request
+
+```
+curl -i localhost:8000
+```
+
+View the traces in jaeger
+
+```
+open http://localhost:16686/
+```
